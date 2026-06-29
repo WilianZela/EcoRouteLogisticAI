@@ -8,3 +8,217 @@
   en ruta, despachos del día, alertas activas y retrasos.
   Desde aquí se accede a todos los módulos del sistema.
   =======================================================================================-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+
+  
+</head>
+<body>
+
+<!-- ── Barra de navegación compartida ── -->
+<!-- La página activa ("Dashboard") tiene la clase "active" para resaltarse -->
+<nav class="navbar">
+  <a class="nav-brand" href="dashboard.html">
+    <span class="nav-logo">🗺️</span>
+    <span class="nav-title">EcoRoute <strong>AI</strong></span>
+  </a>
+  <div class="nav-links">
+    <a href="dashboard.html"       class="nav-link active">Dashboard</a>
+    <a href="geolocalizacion.html" class="nav-link">Geolocalización</a>
+    <a href="flota.html"           class="nav-link">Flota</a>
+    <a href="asignacion.html"      class="nav-link">Asignación</a>
+    <a href="viaticos.html"        class="nav-link">Viáticos</a>
+    <a href="alertas.html"         class="nav-link">Alertas</a>
+    <a href="comunicacion.html"    class="nav-link">Mensajería</a>
+  </div>
+  <div class="nav-user">
+    <span class="role-badge">Admin</span>
+    <span class="user-name">Administrador</span>
+    <a href="login.html" class="btn-logout">Salir</a>
+  </div>
+</nav>
+
+<!-- ── Contenido principal ── -->
+<div class="page-wrapper">
+<div class="container">
+
+  <!-- Encabezado de la página con título y badge del sprint -->
+  <div class="page-header flex-between">
+    <div>
+      <div class="page-title">Dashboard Operativo</div>
+      <div class="page-subtitle">Resumen en tiempo real — Transporte Sur-Austral</div>
+    </div>
+    <span class="sprint-badge">Sprint 1 — Semana 5</span>
+  </div>
+
+  <!-- ── KPIs: Métricas clave del sistema ── -->
+  <!-- Cada .kpi-card muestra un número importante con un ícono y etiqueta -->
+  <div class="kpi-grid">
+    <div class="kpi-card success">
+      <div class="kpi-icon">🚛</div>
+      <div><div class="kpi-value">143</div><div class="kpi-label">Camiones en ruta</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">📦</div>
+      <div><div class="kpi-value">1,284</div><div class="kpi-label">Despachos hoy</div></div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="kpi-icon">⚠️</div>
+      <div><div class="kpi-value">7</div><div class="kpi-label">Alertas activas</div></div>
+    </div>
+    <div class="kpi-card danger">
+      <div class="kpi-icon">⏱️</div>
+      <div><div class="kpi-value">4</div><div class="kpi-label">Retrasos críticos</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">🌡️</div>
+      <div><div class="kpi-value">98.2%</div><div class="kpi-label">Cadena de frío OK</div></div>
+    </div>
+    <!-- Este KPI muestra el uptime del sistema (RNF: Disponibilidad 99.9%) -->
+    <div class="kpi-card success">
+      <div class="kpi-icon">🔗</div>
+      <div><div class="kpi-value">99.9%</div><div class="kpi-label">Uptime sistema</div></div>
+    </div>
+  </div>
+
+  <!-- ── Sección de dos columnas: actividad reciente + panel derecho ── -->
+  <div class="two-col">
+
+    <!-- Columna izquierda: tabla de actividad reciente generada con JS -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 Actividad Reciente</span>
+        <span style="font-size:.75rem; color:var(--text-muted)">Últimas 2 horas</span>
+      </div>
+      <!-- La tabla se rellena dinámicamente con JavaScript abajo -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Camión</th><th>Ruta</th><th>Estado</th><th>Hora</th></tr>
+          </thead>
+          <tbody id="activity-table">
+            <!-- Las filas se generan con JS para simular datos en tiempo real -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Columna derecha: estado de flota + alertas rápidas -->
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+
+      <!-- Tarjeta con barras de progreso del estado de las 150 unidades -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🚛 Estado de Flota (150 unidades)</span>
+        </div>
+        <div class="card-body">
+          <!-- Barra: camiones en ruta -->
+          <div style="margin-bottom:.8rem;">
+            <div class="flex-between"><span style="font-size:.82rem;">En ruta</span><strong>143</strong></div>
+            <div class="progress-bar mt-1"><div class="progress-fill" style="width:95%"></div></div>
+          </div>
+          <!-- Barra: camiones disponibles -->
+          <div style="margin-bottom:.8rem;">
+            <div class="flex-between"><span style="font-size:.82rem;">Disponibles</span><strong>5</strong></div>
+            <div class="progress-bar mt-1"><div class="progress-fill" style="width:3.3%"></div></div>
+          </div>
+          <!-- Barra: camiones en mantenimiento -->
+          <div>
+            <div class="flex-between"><span style="font-size:.82rem;">En mantenimiento</span><strong>2</strong></div>
+            <div class="progress-bar mt-1"><div class="progress-fill warn" style="width:1.3%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta de alertas rápidas con link a la página de alertas -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔔 Alertas Recientes</span>
+          <a href="alertas.html" class="btn btn-sm btn-outline">Ver todas</a>
+        </div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:.6rem;">
+          <!-- Alerta crítica: falla en cadena de frío -->
+          <div class="alert alert-danger">
+            <span class="alert-icon">❄️</span>
+            <div><strong>CAM-047</strong> — Falla cadena de frío. Ruta: Puerto Montt → Punta Arenas</div>
+          </div>
+          <!-- Alerta de advertencia: condición climática -->
+          <div class="alert alert-warning">
+            <span class="alert-icon">⛈️</span>
+            <div><strong>Ruta 5 Sur</strong> — Lluvia intensa prevista. Retraso estimado 45 min.</div>
+          </div>
+          <!-- Alerta informativa: mantenimiento programado -->
+          <div class="alert alert-info">
+            <span class="alert-icon">🔧</span>
+            <div><strong>CAM-112</strong> — Mantenimiento programado mañana 08:00</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- fin .two-col -->
+
+  <!-- ── Accesos rápidos a todos los módulos del sistema ── -->
+  <div class="card mt-3">
+    <div class="card-header"><span class="card-title">⚡ Accesos Rápidos</span></div>
+    <div class="card-body">
+      <div class="quick-links">
+        <a href="geolocalizacion.html" class="quick-link"><span class="ql-icon">🗺️</span><span class="ql-label">Geolocalización</span></a>
+        <a href="flota.html"           class="quick-link"><span class="ql-icon">🚛</span><span class="ql-label">Gestión de Flota</span></a>
+        <a href="asignacion.html"      class="quick-link"><span class="ql-icon">📋</span><span class="ql-label">Asignar Carga</span></a>
+        <a href="viaticos.html"        class="quick-link"><span class="ql-icon">💰</span><span class="ql-label">Calcular Viáticos</span></a>
+        <a href="alertas.html"         class="quick-link"><span class="ql-icon">⚠️</span><span class="ql-label">Ver Alertas</span></a>
+        <a href="comunicacion.html"    class="quick-link"><span class="ql-icon">💬</span><span class="ql-label">Mensajería</span></a>
+        <a href="conductor.html"       class="quick-link"><span class="ql-icon">📱</span><span class="ql-label">App Conductor</span></a>
+        <a href="cliente.html"         class="quick-link"><span class="ql-icon">📦</span><span class="ql-label">Portal Cliente</span></a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ── JavaScript del Dashboard ── -->
+<script>
+  // Datos de ejemplo para generar la tabla de actividad
+  const rutas = [
+    'Santiago → Temuco', 'Puerto Montt → Pto. Arenas',
+    'Temuco → Coyhaique', 'Santiago → Valdivia', 'Concepción → Castro'
+  ];
+  const estados = [
+    { label: 'En ruta',     cls: 'badge-success' },
+    { label: 'Con retraso', cls: 'badge-warning' },
+    { label: 'Alerta',      cls: 'badge-danger'  },
+    { label: 'Entregado',   cls: 'badge-info'    }
+  ];
+
+  /**
+   * Genera 10 filas aleatorias en la tabla de actividad reciente.
+   * Simula datos en tiempo real usando Math.random() para variar
+   * el camión, la ruta, el estado y la hora de cada registro.
+   */
+  const tbody = document.getElementById('activity-table');
+  for (let i = 1; i <= 10; i++) {
+    // Generar un ID de camión aleatorio entre CAM-001 y CAM-150
+    const cam  = 'CAM-' + String(Math.floor(Math.random() * 150) + 1).padStart(3, '0');
+    const ruta = rutas[Math.floor(Math.random() * rutas.length)];
+    const est  = estados[Math.floor(Math.random() * estados.length)];
+    // Hora aleatoria en las últimas 2 horas
+    const hora = new Date(Date.now() - Math.random() * 7200000);
+    const hstr = hora.toTimeString().slice(0, 5);
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${cam}</strong></td>
+        <td>${ruta}</td>
+        <td><span class="badge ${est.cls}">${est.label}</span></td>
+        <td>${hstr}</td>
+      </tr>`;
+  }
+</script>
+
+</body>
+</html>
