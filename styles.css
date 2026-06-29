@@ -1,0 +1,34 @@
+/* ============================================================
+   EcoRoute Logistic AI — Hoja de estilos compartida
+   Archivo: styles.css
+   Autor: Ignacio Vilches (Scrum Master)
+
+   Descripción: Este archivo contiene TODOS los estilos del
+   proyecto. Todas las páginas HTML lo importan con:
+   <link rel="stylesheet" href="styles.css">
+   ============================================================ */
+
+/* ── VARIABLES GLOBALES ──────────────────────────────────────
+   Aquí definimos los colores y valores que se usan en todo el proyecto,
+   Cualquier cambio en estos valores se reflejará en todas las páginas.        */
+:root {
+  --primary:       #1E6E8E;   /* Azul-teal principal (navbar, botones) */
+  --primary-dark:  #144D66;   /* Azul oscuro (encabezados, hover) */
+  --primary-light: #3A9BBF;   /* Azul claro (badges, acentos) */
+  --accent:        #F5A623;   /* Dorado/amarillo (logo, tags activos) */
+  --accent-dark:   #D4870A;   /* Dorado oscuro (hover del accent) */
+  --bg:            #F2F8FB;   /* Fondo gris-azulado muy claro */
+  --surface:       #FFFFFF;   /* Fondo de tarjetas y modales */
+  --text:          #18303D;   /* Color de texto principal */
+  --text-sec:      #456278;   /* Texto secundario (subtítulos) */
+  --text-muted:    #7FA5B8;   /* Texto desactivado o de poca importancia */
+  --success:       #2EC27E;   /* Verde para estados exitosos */
+  --warning:       #F0A500;   /* Amarillo para advertencias */
+  --danger:        #D94535;   /* Rojo para errores o alertas críticas */
+  --border:        #C5DEE9;   /* Color de los bordes de tarjetas */
+  --shadow:        0 2px 10px rgba(30,110,142,.12);   /* Sombra suave */
+  --shadow-lg:     0 4px 24px rgba(30,110,142,.18);   /* Sombra grande */
+  --radius:        10px;   /* Bordes redondeados de tarjetas */
+  --radius-sm:     6px;    /* Bordes redondeados de botones/inputs */
+  --navbar-h:      64px;   /* Altura fija de la barra de navegación */
+}
