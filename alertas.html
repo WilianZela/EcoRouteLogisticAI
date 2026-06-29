@@ -15,6 +15,26 @@
 <title>EcoRoute AI — Alertas Climáticas</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  .alert-card { border-radius:var(--radius); border:1.5px solid; padding:1rem 1.25rem; margin-bottom:.75rem; transition:transform .15s; cursor:default; }
+  .alert-card:hover { transform:translateY(-2px); }
+  .alert-card.critica  { border-color:var(--danger);  background:#fff5f5; }
+  .alert-card.alta     { border-color:var(--warning); background:#fffbf0; }
+  .alert-card.media    { border-color:var(--primary-light); background:#f0f8fc; }
+  .alert-card.baja     { border-color:var(--border); background:var(--bg); }
+  .alert-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; }
+  .alert-type { font-size:1.3rem; }
+  .alert-title { font-weight:700; color:var(--text); font-size:.92rem; }
+  .alert-route { font-size:.8rem; color:var(--text-sec); margin-top:.15rem; }
+  .alert-detail { font-size:.82rem; color:var(--text-sec); margin-top:.4rem; }
+  .alert-footer { display:flex; justify-content:space-between; align-items:center; margin-top:.65rem; }
+  .alert-time { font-size:.73rem; color:var(--text-muted); }
+  .severity-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+  .dot-critica{background:var(--danger);} .dot-alta{background:var(--warning);} .dot-media{background:var(--primary-light);} .dot-baja{background:var(--success);}
+  .filter-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .filter-chip { padding:.35rem .8rem; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); font-size:.78rem; font-weight:600; cursor:pointer; transition:all .18s; color:var(--text-sec); }
+  .filter-chip.sel { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .pulse { animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 </style>
 </head>
 <body>
