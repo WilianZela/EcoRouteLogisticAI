@@ -193,10 +193,13 @@ document.querySelector('.signal-bar').onclick=()=>{
   document.getElementById('offline-banner').style.display=offline?'flex':'none';
   document.querySelector('.signal-bar').textContent=offline?'📵 Sin señal 📴 Offline':'📶 4G ✅ GPS';
 };
+// Simular incremento de kilometraje en la ruta activa
+/**
 setInterval(()=>{
   const kms = document.querySelector('.route-top span:last-child');
   if(kms){ const cur=parseInt(kms.textContent); kms.textContent='Km '+(cur+1)+' de 677'; }
 },5000);
+*/
 </script>
 </body>
 </html>
