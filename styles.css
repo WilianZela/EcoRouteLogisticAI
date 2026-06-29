@@ -1,7 +1,7 @@
 /* ============================================================
    EcoRoute Logistic AI — Hoja de estilos compartida
    Archivo: styles.css
-   Autor: Ignacio Vilches (Scrum Master)
+   Autor: Wilian Zela (Dev Frontend)
 
    Descripción: Este archivo contiene TODOS los estilos del
    proyecto. Todas las páginas HTML lo importan con:
@@ -32,3 +32,250 @@
   --radius-sm:     6px;    /* Bordes redondeados de botones/inputs */
   --navbar-h:      64px;   /* Altura fija de la barra de navegación */
 }
+
+/* ── RESET Y BASE ────────────────────────────────────────────
+   Eliminamos el margen y padding que los navegadores ponen
+   por defecto, para tener control total del diseño.          */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Estilos base del body: fuente, fondo y mínimo de altura */
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── BARRA DE NAVEGACIÓN (NAVBAR) ────────────────────────────
+   La navbar es fija arriba de la pantalla (position: fixed)
+   y está presente en todas las páginas excepto login.html    */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  height: var(--navbar-h);
+  background: var(--primary-dark);
+  display: flex; align-items: center; gap: 1rem;
+  padding: 0 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
+}
+
+/* Logo del sistema (ícono + texto "EcoRoute AI") */
+.nav-brand { display: flex; align-items: center; gap: .5rem; text-decoration: none; flex-shrink: 0; }
+.nav-logo  { font-size: 1.5rem; }
+.nav-title { color: #fff; font-size: 1.1rem; font-weight: 600; letter-spacing: .3px; }
+.nav-title strong { color: var(--accent); } /* La palabra "AI" en dorado */
+
+/* Links de navegación entre páginas */
+.nav-links { display: flex; gap: .25rem; flex: 1; justify-content: center; flex-wrap: wrap; }
+.nav-link  {
+  color: rgba(255,255,255,.78);
+  text-decoration: none; font-size: .82rem; font-weight: 500;
+  padding: .4rem .7rem; border-radius: var(--radius-sm);
+  transition: all .2s;
+}
+.nav-link:hover  { background: rgba(255,255,255,.12); color: #fff; }
+/* La página activa se muestra con fondo dorado */
+.nav-link.active { background: var(--accent); color: #1a1a1a; font-weight: 600; }
+
+/* Sección derecha de la navbar: rol, nombre y botón de salir */
+.nav-user  { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+.user-name { color: rgba(255,255,255,.85); font-size: .82rem; }
+
+/* Badge que indica el rol del usuario (Admin, Conductor, Cliente) */
+.role-badge {
+  background: var(--primary-light); color: #fff;
+  font-size: .7rem; font-weight: 700; padding: .2rem .55rem;
+  border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
+}
+.role-badge.conductor { background: var(--warning); color: #1a1a1a; }
+.role-badge.cliente   { background: var(--success); }
+
+/* ── LAYOUT GENERAL ──────────────────────────────────────────
+   El page-wrapper empuja el contenido hacia abajo para que
+   no quede tapado por la navbar fija.                        */
+.page-wrapper { padding-top: calc(var(--navbar-h) + 1.5rem); padding-bottom: 2rem; }
+/* Contenedor centrado con ancho máximo */
+.container    { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Título y subtítulo de cada página */
+.page-header   { margin-bottom: 1.5rem; }
+.page-title    { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); }
+.page-subtitle { color: var(--text-sec); font-size: .9rem; margin-top: .2rem; }
+
+/* ── TARJETAS (CARDS) ────────────────────────────────────────
+   Las tarjetas son los bloques blancos que contienen
+   información. Se usan en casi todas las páginas.           */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+/* Encabezado de la tarjeta (título + acciones) */
+.card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: .95rem; font-weight: 600; color: var(--primary-dark); }
+/* Contenido interno de la tarjeta */
+.card-body  { padding: 1.25rem; }
+
+/* ── TARJETAS DE KPI (MÉTRICAS CLAVE) ───────────────────────
+   Se usan en el dashboard para mostrar números importantes
+   como camiones activos, alertas, uptime, etc.             */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+}
+.kpi-icon  { font-size: 2rem; flex-shrink: 0; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.kpi-label { font-size: .78rem; color: var(--text-sec); margin-top: .2rem; text-transform: uppercase; letter-spacing: .5px; }
+/* Variantes de color para el valor del KPI según el estado */
+.kpi-card.danger  .kpi-value { color: var(--danger);  }
+.kpi-card.warning .kpi-value { color: var(--warning); }
+.kpi-card.success .kpi-value { color: var(--success); }
+
+/* ── BOTONES ─────────────────────────────────────────────────
+   Sistema de botones con variantes de color y tamaño.
+   Todos comparten la clase .btn y agregan una variante.     */
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .55rem 1.1rem; border-radius: var(--radius-sm);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  border: 2px solid transparent; transition: all .2s; text-decoration: none;
+}
+.btn-primary   { background: var(--primary);    color: #fff; border-color: var(--primary);  }
+.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-accent    { background: var(--accent);     color: #1a1a1a; border-color: var(--accent); }
+.btn-accent:hover  { background: var(--accent-dark); border-color: var(--accent-dark); }
+.btn-outline   { background: transparent; color: var(--primary); border-color: var(--primary); }
+.btn-outline:hover { background: var(--primary); color: #fff; }
+.btn-danger    { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-sm        { padding: .35rem .75rem; font-size: .78rem; } /* Botón más pequeño */
+/* Botón especial para "Cerrar sesión" en la navbar */
+.btn-logout    {
+  background: rgba(255,255,255,.15); color: #fff;
+  border-color: rgba(255,255,255,.3); font-size: .78rem;
+  padding: .35rem .7rem; border-radius: var(--radius-sm);
+  cursor: pointer; text-decoration: none; transition: all .2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,.28); }
+
+/* ── BADGES / ETIQUETAS DE ESTADO ────────────────────────────
+   Los badges son pequeñas etiquetas de colores que indican
+   el estado de un elemento (ej: "En ruta", "Con retraso")   */
+.badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .2rem .6rem; border-radius: 20px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .3px;
+}
+/* El punto de color antes del texto del badge */
+.badge::before { content:''; width:7px; height:7px; border-radius:50%; }
+/* Variantes de color según el estado */
+.badge-success { background: #dcf5e9; color: #1a8050; }
+.badge-success::before { background: var(--success); }
+.badge-warning { background: #fff3cd; color: #8a5f00; }
+.badge-warning::before { background: var(--warning); }
+.badge-danger  { background: #fde8e6; color: #962218; }
+.badge-danger::before  { background: var(--danger);  }
+.badge-info    { background: #daedf5; color: #1a5e78; }
+.badge-info::before    { background: var(--primary-light); }
+.badge-gray    { background: #e8edf0; color: #456278; }
+.badge-gray::before    { background: #7FA5B8; }
+
+/* ── TABLAS ──────────────────────────────────────────────────
+   Tablas de datos usadas en flota.html, asignacion.html, etc.
+   El table-wrap permite scroll horizontal en pantallas chicas */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+/* Encabezado de la tabla */
+th    {
+  background: var(--bg); color: var(--text-sec);
+  font-weight: 600; font-size: .75rem;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: .7rem 1rem; text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+td    { padding: .75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; } /* Última fila sin borde inferior */
+tr:hover td      { background: var(--bg); } /* Fila cambia de color al pasar el mouse */
+
+/* ── FORMULARIOS ─────────────────────────────────────────────
+   Estilos para todos los inputs, selects y labels del sistema */
+.form-group  { margin-bottom: 1rem; }
+/* Etiqueta del campo */
+.form-label  { display: block; font-size: .82rem; font-weight: 600; color: var(--text-sec); margin-bottom: .4rem; }
+/* Input/Select genérico */
+.form-control {
+  width: 100%; padding: .6rem .85rem;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: .88rem; color: var(--text); background: var(--surface);
+  transition: border-color .2s; outline: none;
+}
+/* Resaltado azul cuando el campo está activo */
+.form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,110,142,.12); }
+/* Fila de dos columnas para poner dos campos lado a lado */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+/* ── ALERTAS / MENSAJES DEL SISTEMA ─────────────────────────
+   Cajas de mensajes informativos dentro de las páginas     */
+.alert {
+  padding: .85rem 1rem; border-radius: var(--radius-sm);
+  font-size: .85rem; margin-bottom: 1rem;
+  display: flex; align-items: flex-start; gap: .6rem;
+}
+.alert-info    { background: #daedf5; color: #1a5e78; border-left: 4px solid var(--primary-light); }
+.alert-warning { background: #fff3cd; color: #7a5200; border-left: 4px solid var(--warning); }
+.alert-danger  { background: #fde8e6; color: #8b1f1f; border-left: 4px solid var(--danger); }
+.alert-success { background: #dcf5e9; color: #1a6640; border-left: 4px solid var(--success); }
+.alert-icon    { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+
+/* ── GRILLAS DE COLUMNAS ─────────────────────────────────────
+   Para distribuir el contenido en columnas                  */
+.two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; }
+/* Layout con barra lateral izquierda (usado en geolocalizacion.html) */
+.sidebar-layout { display: grid; grid-template-columns: 300px 1fr; gap: 1.25rem; }
+/* En pantallas pequeñas, las columnas se apilan verticalmente */
+@media (max-width: 900px) {
+  .two-col, .three-col, .sidebar-layout { grid-template-columns: 1fr; }
+}
+
+/* ── UTILIDADES ──────────────────────────────────────────────
+   Clases de ayuda rápida para alineación y espaciado       */
+.text-center { text-align: center; }
+.text-right  { text-align: right; }
+.mt-1  { margin-top: .5rem;  }
+.mt-2  { margin-top: 1rem;   }
+.mt-3  { margin-top: 1.5rem; }
+.mb-2  { margin-bottom: 1rem; }
+.flex  { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-1 { gap: .5rem; }
+.gap-2 { gap: 1rem;  }
+
+/* Línea divisoria horizontal */
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+/* Barra de búsqueda con ícono de lupa a la izquierda */
+.search-bar { position: relative; }
+.search-bar input { padding-left: 2.2rem; }
+.search-bar .search-icon {
+  position: absolute; left: .7rem; top: 50%;
+  transform: translateY(-50%); color: var(--text-muted);
+  font-size: .95rem; pointer-events: none;
+}
+
+/* ── SCROLLBAR PERSONALIZADA ─────────────────────────────────
+   Estilo más elegante para la barra de desplazamiento      */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
