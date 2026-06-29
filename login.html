@@ -23,21 +23,101 @@
 
 
 <body>
+<!-- ── Caja principal del login ── -->
+<div class="login-box">
 
-<div class="login-container">
-    <h1>EcoRoute AI</h1>
+  <!-- Logo y nombre del sistema -->
+  <div class="login-logo">
+    <span class="logo-icon">🚛🏢</span>
+    <h1>EcoRoute <span>AI</span></h1>
     <p>Sistema Logístico Inteligente — Transporte Sur-Austral</p>
-    <form>
-      <label>Usuario</label>
-      <input type="text" placeholder="Ingrese su usuario">
-      <label>Contraseña</label>
-      <input type="password" placeholder="Ingrese su contraseña">
-      <button type="submit">Iniciar Sesión</button>
-    </form>
+  </div>
+
+  <!-- Pestañas de selección de rol -->
+  <!-- Cada pestaña llama a setRole() con el rol y el elemento clickeado -->
+  <div class="role-tabs">
+    <button class="role-tab active" onclick="setRole('admin', this)">👤 Administrador</button>
+    <button class="role-tab" onclick="setRole('conductor', this)">🚛 Conductor</button>
+    <button class="role-tab" onclick="setRole('cliente', this)">📦 Cliente</button>
+  </div>
+
+  <!-- Recuadro con credenciales de prueba para la demo -->
+  <div class="demo-hint">
+    <strong>Demo:</strong> Use cualquier usuario y contraseña para ingresar.<br>
+    <strong>Admin:</strong> admin / admin123 &nbsp;|&nbsp;
+    <strong>Conductor:</strong> conductor / 1234
+  </div>
+
+  <!-- Mensaje de error (oculto por defecto, aparece con JS) -->
+  <div id="error-msg" class="error-msg">⚠️ Usuario o contraseña incorrectos.</div>
+
+  <!-- Campos del formulario -->
+  <div class="form-group">
+    <label class="form-label">Usuario</label>
+    <input id="usuario" type="text" class="form-control" placeholder="Ingrese su usuario">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Contraseña</label>
+    <input id="pass" type="password" class="form-control" placeholder="••••••••">
+  </div>
+
+  <!-- Botón de login -->
+  <button class="login-btn" onclick="doLogin()">Iniciar Sesión</button>
+
+  <!-- Links de pie: recuperar acceso y acceso directo al portal cliente -->
+  <div class="login-footer">
+    ¿Olvidó su contraseña? <a href="#">Recuperar acceso</a><br><br>
+    Seguimiento de envío sin cuenta → <a href="cliente.html">Portal Cliente</a>
+  </div>
+
 </div>
 
-
+<!-- ── JavaScript del Login ── -->
 <script>
+  // Variable que guarda el rol seleccionado actualmente
+  let currentRole = 'admin';
+
+  /**
+   * setRole: cambia el rol activo cuando el usuario hace clic en una pestaña
+   * @param {string} role - el rol elegido ('admin', 'conductor' o 'cliente')
+   * @param {HTMLElement} el - el botón que fue clickeado
+   */
+  function setRole(role, el) {
+    currentRole = role;
+    // Quitamos la clase 'active' de todas las pestañas
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    // Ponemos 'active' solo en la pestaña clickeada
+    el.classList.add('active');
+  }
+
+  /**
+   * doLogin: valida los campos y redirige al usuario según su rol
+   * Si los campos están vacíos, muestra el mensaje de error
+   */
+  function doLogin() {
+    const usuario = document.getElementById('usuario').value.trim();
+    const pass    = document.getElementById('pass').value.trim();
+
+    // Validación: ambos campos deben tener contenido
+    if (!usuario || !pass) {
+      document.getElementById('error-msg').style.display = 'block';
+      return; // Salimos de la función sin redirigir
+    }
+
+    // Redirigir según el rol seleccionado
+    if (currentRole === 'conductor') {
+      window.location.href = 'conductor.html'; // App móvil del conductor
+    } else if (currentRole === 'cliente') {
+      window.location.href = 'cliente.html';   // Portal de seguimiento
+    } else {
+      window.location.href = 'dashboard.html'; // Panel de administración
+    }
+  }
+
+  // Permitir hacer login presionando la tecla Enter -falta agregar   
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
 </script>
 
 
