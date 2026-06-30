@@ -1,0 +1,268 @@
+<!--=======================================================================================
+  EcoRoute Logistic AI — ASIGNACION
+  Archivo: asignacion.html
+  Autor: Samira Usen (Product Owner)
+
+  Descripción: Formulario de asignación de cargas con validación automática: 
+  verifica que el conductor tenga licencia vigente y que el camión esté
+  disponible y en buen estado mecánico antes de confirmar la asignación.
+  =======================================================================================-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoRoute AI — Asignación de Cargas</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .assign-form { max-width:680px; }
+  .step-header { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; color:var(--primary-dark); font-weight:700; }
+  .step-num { width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0; }
+  .validation-row { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .val-chip { display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid; }
+  .val-ok  { border-color:var(--success);color:var(--success);background:#dcf5e9; }
+  .val-err { border-color:var(--danger);color:var(--danger);background:#fde8e6; }
+  .val-pending { border-color:var(--border);color:var(--text-muted);background:var(--bg); }
+  .summary-card { background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius); padding:1rem; margin-top:1rem; }
+  .summary-row { display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.85rem; }
+  .summary-row:last-child { border:none; font-weight:700; color:var(--primary-dark); }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="dashboard.html"><span class="nav-logo">🗺️</span><span class="nav-title">EcoRoute <strong>AI</strong></span></a>
+  <div class="nav-links">
+    <a href="dashboard.html"       class="nav-link">Dashboard</a>
+    <a href="geolocalizacion.html" class="nav-link">Geolocalización</a>
+    <a href="flota.html"           class="nav-link">Flota</a>
+    <a href="asignacion.html"      class="nav-link active">Asignación</a>
+    <a href="viaticos.html"        class="nav-link">Viáticos</a>
+    <a href="alertas.html"         class="nav-link">Alertas</a>
+    <a href="comunicacion.html"    class="nav-link">Mensajería</a>
+  </div>
+  <div class="nav-user">
+    <span class="role-badge">Admin</span>
+    <span class="user-name">Administrador</span>
+    <a href="login.html" class="btn-logout">Salir</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">📋 Asignación de Cargas</div>
+    <div class="page-subtitle">RF-01 · Validación de credenciales, estado mecánico y asignación automatizada</div>
+  </div>
+
+  <div class="two-col">
+    <!-- Formulario -->
+    <div class="card assign-form">
+      <div class="card-header"><span class="card-title">Nueva Asignación</span></div>
+      <div class="card-body">
+        <!-- Paso 1 -->
+        <div class="step-header"><span class="step-num">1</span> Seleccionar Conductor</div>
+        <div class="form-group">
+          <label class="form-label">Conductor</label>
+          <select class="form-control" id="sel-conductor" onchange="validateConductor()">
+            <option value="">— Seleccione —</option>
+            <option value="ok">Cristiano Ronaldo (Lic. vigente ✅)</option>
+            <option value="ok">María González (Lic. vigente ✅)</option>
+            <option value="ok">Carlos Rodríguez (Lic. vigente ✅)</option>
+            <option value="err">Pedro Muñoz (Lic. vencida ❌)</option>
+            <option value="ok">Ana Morales (Lic. vigente ✅)</option>
+          </select>
+        </div>
+
+        <hr class="divider">
+        <!-- Paso 2 -->
+        <div class="step-header"><span class="step-num">2</span> Seleccionar Camión</div>
+        <div class="form-group">
+          <label class="form-label">Unidad disponible</label>
+          <select class="form-control" id="sel-camion" onchange="validateCamion()">
+            <option value="">— Seleccione —</option>
+            <option value="ok">CAM-005 · BCAT-74 (Refrigerado ✅)</option>
+            <option value="ok">CAM-018 · CGPZ-11 (Carga Seca ✅)</option>
+            <option value="warn">CAM-033 · DVAM-55 (Revisión leve ⚠️)</option>
+            <option value="ok">CAM-041 · FKRE-28 (Óptimo ✅)</option>
+            <option value="err">CAM-009 · HLOX-63 (En taller ❌)</option>
+          </select>
+        </div>
+
+        <hr class="divider">
+        <!-- Paso 3 -->
+        <div class="step-header"><span class="step-num">3</span> Datos de la Carga</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tipo de Carga</label>
+            <select class="form-control" id="tipo-carga" onchange="updateSummary()">
+              <option>Frutas</option><option>Lácteos</option><option>Carga Seca</option>
+              <option>Farmacéutico</option><option>Electrónica</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peso (kg)</label>
+            <input type="number" class="form-control" id="peso" placeholder="12000" min="0" oninput="updateSummary()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Origen</label>
+            <select class="form-control" id="origen" onchange="updateSummary()">
+              <option>Santiago</option><option>Concepción</option><option>Temuco</option><option>Puerto Montt</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Destino</label>
+            <select class="form-control" id="destino" onchange="updateSummary()">
+              <option>Punta Arenas</option><option>Coyhaique</option><option>Valdivia</option><option>Puerto Montt</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Validaciones -->
+        <div class="step-header mt-2"><span class="step-num">✓</span> Validaciones del Sistema</div>
+        <div class="validation-row">
+          <span class="val-chip val-pending" id="v-licencia">🪪 Licencia conductor</span>
+          <span class="val-chip val-pending" id="v-mecanico">🔧 Estado mecánico</span>
+          <span class="val-chip val-pending" id="v-disponible">📋 Disponibilidad</span>
+        </div>
+
+        <!-- Resumen -->
+        <div class="summary-card" id="summary" style="display:none;">
+          <strong style="font-size:.85rem;color:var(--primary-dark);">📄 Resumen de Asignación</strong>
+          <div class="summary-row"><span>Conductor</span><span id="sum-conductor">—</span></div>
+          <div class="summary-row"><span>Camión</span><span id="sum-camion">—</span></div>
+          <div class="summary-row"><span>Ruta</span><span id="sum-ruta">—</span></div>
+          <div class="summary-row"><span>Carga</span><span id="sum-carga">—</span></div>
+          <div class="summary-row"><span>ID Despacho</span><span id="sum-despacho">—</span></div>
+        </div>
+
+        <div style="display:flex;gap:.6rem;margin-top:1.25rem;">
+          <button class="btn btn-primary" style="flex:1" onclick="asignar()" id="btn-asignar">Confirmar Asignación</button>
+          <button class="btn btn-outline" onclick="resetForm()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">📜 Historial de Asignaciones</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Despacho</th><th>Conductor</th><th>Camión</th><th>Ruta</th><th>Estado</th></tr></thead>
+          <tbody id="historial"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// Variables que guardan el estado de la validación
+// condStatus: "ok" = licencia vigente, "err" = licencia vencida
+// camStatus:  "ok" = disponible, "warn" = revisión pendiente, "err" = en taller
+let condStatus='', camStatus='';
+
+/**
+   * validateConductor: valida si el conductor tiene licencia vigente
+   * Actualiza el chip de validación en tiempo real con color verde o rojo
+   */
+  function validateConductor(){
+  condStatus = document.getElementById('sel-conductor').value;
+  const el = document.getElementById('v-licencia');
+  if(!condStatus){ el.className='val-chip val-pending'; el.textContent='🪪 Licencia conductor'; }
+  else if(condStatus==='ok'){ el.className='val-chip val-ok'; el.textContent='🪪 Licencia vigente ✅'; }
+  else { el.className='val-chip val-err'; el.textContent='🪪 Licencia vencida ❌'; }
+  updateSummary();
+}
+
+function validateCamion(){
+  camStatus = document.getElementById('sel-camion').value;
+  const em = document.getElementById('v-mecanico');
+  const ed = document.getElementById('v-disponible');
+  if(!camStatus){
+    em.className='val-chip val-pending'; em.textContent='🔧 Estado mecánico';
+    ed.className='val-chip val-pending'; ed.textContent='📋 Disponibilidad';
+  } else if(camStatus==='ok'){
+    em.className='val-chip val-ok'; em.textContent='🔧 Estado óptimo ✅';
+    ed.className='val-chip val-ok'; ed.textContent='📋 Disponible ✅';
+  } else if(camStatus==='warn'){
+    em.className='val-chip val-err'; em.textContent='🔧 Revisión pendiente ⚠️';
+    ed.className='val-chip val-ok'; ed.textContent='📋 Disponible ✅';
+  } else {
+    em.className='val-chip val-err'; em.textContent='🔧 En taller ❌';
+    ed.className='val-chip val-err'; ed.textContent='📋 No disponible ❌';
+  }
+  updateSummary();
+}
+
+function updateSummary(){
+  const c = document.getElementById('sel-conductor');
+  const k = document.getElementById('sel-camion');
+  if(c.value && k.value){
+    document.getElementById('summary').style.display='block';
+    document.getElementById('sum-conductor').textContent = c.options[c.selectedIndex].text.split('(')[0].trim();
+    document.getElementById('sum-camion').textContent = k.options[k.selectedIndex].text.split('(')[0].trim();
+    document.getElementById('sum-ruta').textContent = document.getElementById('origen').value + ' → ' + document.getElementById('destino').value;
+    document.getElementById('sum-carga').textContent = document.getElementById('tipo-carga').value + (document.getElementById('peso').value ? ' · '+document.getElementById('peso').value+' kg':'');
+    document.getElementById('sum-despacho').textContent = 'DSP-'+Math.floor(Math.random()*9000+1000);
+  }
+}
+
+/**
+   * asignar: verifica todas las validaciones y confirma la asignación
+   * Si hay algún error (licencia vencida o camión en taller), bloquea la acción
+   */
+  function asignar(){
+  if(!condStatus || !camStatus){ alert('⚠️ Complete todos los campos antes de asignar.'); return; }
+  if(condStatus==='err'){ alert('❌ No se puede asignar: conductor con licencia vencida.'); return; }
+  if(camStatus==='err'){ alert('❌ No se puede asignar: camión no disponible.'); return; }
+  addHistorial();
+  alert('✅ Asignación confirmada exitosamente.');
+  resetForm();
+}
+
+function addHistorial(){
+  const tbody = document.getElementById('historial');
+  const rutas = ['Santiago → Temuco','Puerto Montt → Pto. Arenas','Temuco → Coyhaique'];
+  const states = [
+    {l:'En ruta',c:'badge-success'},{l:'Entregado',c:'badge-info'},{l:'Con retraso',c:'badge-warning'}
+  ];
+  const st = states[Math.floor(Math.random()*states.length)];
+  tbody.insertAdjacentHTML('afterbegin',`<tr>
+    <td><strong>DSP-${Math.floor(Math.random()*9000+1000)}</strong></td>
+    <td>J. Pérez</td><td>CAM-042</td>
+    <td>${rutas[Math.floor(Math.random()*rutas.length)]}</td>
+    <td><span class="badge ${st.c}">${st.l}</span></td>
+  </tr>`);
+}
+
+function resetForm(){
+  document.querySelectorAll('select,input[type=number],input[type=text]').forEach(el=>el.value='');
+  document.querySelectorAll('.val-chip').forEach(el=>{ el.className='val-chip val-pending'; });
+  document.getElementById('v-licencia').textContent='🪪 Licencia conductor';
+  document.getElementById('v-mecanico').textContent='🔧 Estado mecánico';
+  document.getElementById('v-disponible').textContent='📋 Disponibilidad';
+  document.getElementById('summary').style.display='none';
+  condStatus=''; camStatus='';
+}
+
+// Historial inicial
+const rutas=['Santiago → Temuco','Puerto Montt → Pto. Arenas','Concepción → Castro','Temuco → Coyhaique'];
+const condlist=['J. Pérez','M. González','C. Rodríguez','A. Morales'];
+const camlist=['CAM-012','CAM-034','CAM-007','CAM-055','CAM-091'];
+const stlist=[{l:'En ruta',c:'badge-success'},{l:'Entregado',c:'badge-info'},{l:'Con retraso',c:'badge-warning'}];
+for(let i=0;i<6;i++){
+  const st=stlist[Math.floor(Math.random()*stlist.length)];
+  document.getElementById('historial').innerHTML+=`<tr>
+    <td><strong>DSP-${Math.floor(Math.random()*9000+1000)}</strong></td>
+    <td>${condlist[Math.floor(Math.random()*condlist.length)]}</td>
+    <td>${camlist[Math.floor(Math.random()*camlist.length)]}</td>
+    <td>${rutas[Math.floor(Math.random()*rutas.length)]}</td>
+    <td><span class="badge ${st.c}">${st.l}</span></td>
+  </tr>`;
+}
+</script>
+</body>
+</html>

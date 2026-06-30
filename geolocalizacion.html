@@ -1,0 +1,198 @@
+<!--=======================================================================================
+  EcoRoute Logistic AI — GEOLOCALIZACION
+  Archivo: geolocalizacion.html
+  Autor: Ignacio Vilches (Scrum Master)
+
+  Descripción: Mapa interactivo con Leaflet y OpenStreetMap. 
+  Muestra en tiempo real la posición de los 150 camiones de la flota, con 
+  marcadores de color según su estado (en ruta, con retraso, alerta, disponible). 
+  Se actualiza cada 30 segundos via GPS.
+  =======================================================================================-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoRoute AI — Geolocalización</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  .geo-layout { display:grid; grid-template-columns:300px 1fr; gap:1.25rem; }
+  @media(max-width:900px){ .geo-layout{grid-template-columns:1fr;} }
+  #map { height:520px; border-radius:var(--radius); border:1px solid var(--border); }
+  .truck-list { overflow-y:auto; max-height:520px; }
+  .truck-item { padding:.75rem 1rem; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; display:flex; gap:.75rem; align-items:center; }
+  .truck-item:hover { background:var(--bg); }
+  .truck-item.selected { background:#daedf5; border-left:3px solid var(--primary); }
+  .truck-num { font-weight:700; color:var(--primary-dark); font-size:.88rem; }
+  .truck-route { font-size:.75rem; color:var(--text-sec); }
+  .truck-ico { font-size:1.4rem; flex-shrink:0; }
+  .info-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; margin-bottom:1.25rem; }
+  .info-cell { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:.75rem 1rem; text-align:center; }
+  .info-cell .val { font-size:1.3rem; font-weight:800; color:var(--primary); }
+  .info-cell .lbl { font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; margin-top:.1rem; }
+  .legend { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.75rem; font-size:.78rem; color:var(--text-sec); }
+  .legend-item { display:flex; align-items:center; gap:.35rem; }
+  .legend-dot { width:12px;height:12px;border-radius:50%; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="dashboard.html"><span class="nav-logo">🗺️</span><span class="nav-title">EcoRoute <strong>AI</strong></span></a>
+  <div class="nav-links">
+    <a href="dashboard.html"       class="nav-link">Dashboard</a>
+    <a href="geolocalizacion.html" class="nav-link active">Geolocalización</a>
+    <a href="flota.html"           class="nav-link">Flota</a>
+    <a href="asignacion.html"      class="nav-link">Asignación</a>
+    <a href="viaticos.html"        class="nav-link">Viáticos</a>
+    <a href="alertas.html"         class="nav-link">Alertas</a>
+    <a href="comunicacion.html"    class="nav-link">Mensajería</a>
+  </div>
+  <div class="nav-user">
+    <span class="role-badge">Admin</span>
+    <span class="user-name">Administrador</span>
+    <a href="login.html" class="btn-logout">Salir</a>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+<div class="container">
+  <div class="page-header flex-between">
+    <div>
+      <div class="page-title">🗺️ Geolocalización en Tiempo Real</div>
+      <div class="page-subtitle">RF-02 · Monitoreo GPS cada 30 segundos · 150 unidades</div>
+    </div>
+    <div class="flex gap-1">
+      <span id="last-update" style="font-size:.78rem;color:var(--text-muted);align-self:center;"></span>
+      <button class="btn btn-primary btn-sm" onclick="refreshPositions()">🔄 Actualizar</button>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-cell"><div class="val" style="color:var(--success)">143</div><div class="lbl">En Ruta</div></div>
+    <div class="info-cell"><div class="val" style="color:var(--warning)">4</div><div class="lbl">Con Retraso</div></div>
+    <div class="info-cell"><div class="val" style="color:var(--danger)">1</div><div class="lbl">Alerta Crítica</div></div>
+    <div class="info-cell"><div class="val">5</div><div class="lbl">Disponibles</div></div>
+  </div>
+
+  <div class="geo-layout">
+    <!-- Lista camiones -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🚛 Flota Activa</span>
+      </div>
+      <div style="padding:.6rem;">
+        <input type="text" class="form-control" placeholder="🔍 Buscar camión..." oninput="filterTrucks(this.value)" style="font-size:.82rem;">
+      </div>
+      <div class="truck-list" id="truck-list"></div>
+    </div>
+
+    <!-- Mapa -->
+    <div>
+      <div id="map"></div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--success)"></span>En ruta</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--warning)"></span>Con retraso</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--danger)"></span>Alerta crítica</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--text-muted)"></span>Disponible</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Puntos de la ruta Sur-Austral
+// Puntos geográficos de la ruta Sur-Austral (lat/lng reales de Chile)
+// Los camiones se distribuyen aleatoriamente entre estos puntos
+const routePoints = [
+  {name:'Santiago',      lat:-33.45, lng:-70.67},
+  {name:'Rancagua',      lat:-34.17, lng:-70.74},
+  {name:'Talca',         lat:-35.43, lng:-71.66},
+  {name:'Chillán',       lat:-36.61, lng:-72.10},
+  {name:'Concepción',    lat:-36.83, lng:-73.05},
+  {name:'Temuco',        lat:-38.74, lng:-72.59},
+  {name:'Valdivia',      lat:-39.81, lng:-73.24},
+  {name:'Puerto Montt',  lat:-41.47, lng:-72.94},
+  {name:'Coyhaique',     lat:-45.57, lng:-72.07},
+  {name:'Punta Arenas',  lat:-53.16, lng:-70.91},
+];
+
+const trucks = [];
+const statuses = ['active','active','active','active','active','delayed','delayed','critical','idle'];
+const cargas = ['Frutas','Lácteos','Carga Seca','Refrigerado','Electrónica','Combustible','Farmacéutico'];
+
+for(let i=1;i<=15;i++){
+  const pt = routePoints[Math.floor(Math.random()*routePoints.length)];
+  const st = statuses[Math.floor(Math.random()*statuses.length)];
+  const delta = (Math.random()-0.5)*1.5;
+  trucks.push({
+    id:'CAM-'+String(i).padStart(3,'0'),
+    lat: pt.lat + (Math.random()-0.5)*0.3,
+    lng: pt.lng + (Math.random()-0.5)*0.3,
+    status: st,
+    zone: pt.name,
+    carga: cargas[Math.floor(Math.random()*cargas.length)],
+    speed: Math.floor(Math.random()*60+50)+' km/h',
+    eta: Math.floor(Math.random()*180+30)+' min'
+  });
+}
+
+// Inicializamos el mapa de Leaflet centrado en Chile (lat:-38, lng:-71)
+// Zoom 5 muestra toda la ruta Santiago-Punta Arenas
+const map = L.map('map').setView([-38, -71], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap', maxZoom:18
+}).addTo(map);
+
+const colorMap = {active:'#2EC27E',delayed:'#F0A500',critical:'#D94535',idle:'#7FA5B8'};
+const markers = [];
+
+/**
+ * makeIcon: crea un marcador circular de color para cada camión
+ * El color indica el estado: verde=en ruta, amarillo=retraso, rojo=alerta, gris=disponible
+ */
+function makeIcon(color){
+  return L.divIcon({
+    className:'',
+    html:`<div style="background:${color};width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></div>`,
+    iconSize:[18,18], iconAnchor:[9,9]
+  });
+}
+
+trucks.forEach((t,i)=>{
+  const color = colorMap[t.status];
+  const m = L.marker([t.lat,t.lng],{icon:makeIcon(color)}).addTo(map);
+  m.bindPopup(`<strong>${t.id}</strong><br>Zona: ${t.zone}<br>Carga: ${t.carga}<br>Velocidad: ${t.speed}<br>ETA: ${t.eta}`);
+  markers.push(m);
+});
+
+// Truck list
+const listEl = document.getElementById('truck-list');
+let allItems = [];
+trucks.forEach((t,i)=>{
+  const statusLabel = {active:'En ruta',delayed:'Con retraso',critical:'Alerta',idle:'Disponible'}[t.status];
+  const badgeCls = {active:'badge-success',delayed:'badge-warning',critical:'badge-danger',idle:'badge-gray'}[t.status];
+  const ico = {active:'🚛',delayed:'⏱️',critical:'🚨',idle:'🅿️'}[t.status];
+  const el = document.createElement('div');
+  el.className='truck-item';
+  el.dataset.id=t.id;
+  el.innerHTML=`<span class="truck-ico">${ico}</span><div style="flex:1"><div class="truck-num">${t.id}</div><div class="truck-route">${t.zone} · ${t.carga}</div></div><span class="badge ${badgeCls}" style="font-size:.65rem;">${statusLabel}</span>`;
+  el.onclick=()=>{ document.querySelectorAll('.truck-item').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); map.setView([t.lat,t.lng],10); markers[i].openPopup(); };
+  listEl.appendChild(el);
+  allItems.push(el);
+});
+
+function filterTrucks(q){
+  allItems.forEach(el=>{ el.style.display = el.dataset.id.toLowerCase().includes(q.toLowerCase()) ? '' : 'none'; });
+}
+
+function refreshPositions(){
+  document.getElementById('last-update').textContent = '↻ Actualizado '+new Date().toTimeString().slice(0,5);
+}
+refreshPositions();
+setInterval(refreshPositions, 30000);
+</script>
+</body>
+</html>

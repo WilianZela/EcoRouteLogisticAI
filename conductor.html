@@ -1,0 +1,205 @@
+<!--=======================================================================================
+  EcoRoute Logistic AI — CONDUCTOR
+  Archivo: conductor.html
+  Autor: Wilian Zela (Dev Frontend)
+
+  Descripción: Aplicación móvil para conductores diseñada con enfoque Mobile-First. 
+  Botones de alto contraste adaptados para uso con guantes y conducción nocturna. 
+  Incluye ruta activa, acciones rápidas, estado del conductor y modo offline.
+  =======================================================================================-->
+  <!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EcoRoute AI — App Conductor</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { background:#0D3444; }
+  .app-shell { max-width:400px; margin:0 auto; background:var(--bg); min-height:100vh; display:flex; flex-direction:column; position:relative; }
+  .app-header { background:var(--primary-dark); padding:1rem 1.25rem .75rem; color:#fff; }
+  .app-header .top { display:flex; justify-content:space-between; align-items:center; }
+  .app-logo { font-size:.9rem; font-weight:700; }
+  .app-logo span { color:var(--accent); }
+  .signal-bar { font-size:.75rem; opacity:.8; }
+  .driver-card { background:linear-gradient(135deg, var(--primary),var(--primary-light)); color:#fff; border-radius:0 0 16px 16px; padding:1rem 1.25rem 1.5rem; }
+  .driver-name { font-size:1.1rem; font-weight:800; }
+  .driver-sub  { font-size:.78rem; opacity:.85; margin-top:.15rem; }
+  .route-banner { background:var(--surface); margin:1rem; border-radius:var(--radius); border:1px solid var(--border); box-shadow:var(--shadow); overflow:hidden; }
+  .route-banner .route-top { background:var(--primary-dark); color:#fff; padding:.7rem 1rem; font-size:.82rem; font-weight:600; display:flex; justify-content:space-between; }
+  .route-stops { padding:.75rem 1rem; }
+  .stop { display:flex; align-items:flex-start; gap:.7rem; padding:.4rem 0; }
+  .stop-dot { width:12px;height:12px;border-radius:50%;border:2px solid;flex-shrink:0;margin-top:.2rem; }
+  .stop-dot.origin { border-color:var(--primary);background:var(--primary); }
+  .stop-dot.dest   { border-color:var(--accent);background:var(--accent); }
+  .stop-line { width:2px;background:var(--border);height:20px;margin-left:5px; }
+  .stop-label { font-size:.85rem; font-weight:600; color:var(--text); }
+  .stop-sub   { font-size:.73rem; color:var(--text-sec); }
+  .big-btn { display:block; width:calc(100% - 2rem); margin:.5rem 1rem; padding:1.1rem; border-radius:14px; border:none; font-size:1rem; font-weight:800; cursor:pointer; transition:all .15s; text-align:center; letter-spacing:.3px; }
+  .big-btn:active { transform:scale(.97); }
+  .big-btn-primary { background:var(--primary); color:#fff; }
+  .big-btn-success { background:var(--success); color:#fff; }
+  .big-btn-warning { background:var(--warning); color:#fff; }
+  .big-btn-accent  { background:var(--accent); color:#1a1a1a; }
+  .section-title { font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.8px; padding:.75rem 1.25rem .3rem; }
+  .info-row { display:flex; gap:.75rem; padding:.5rem 1rem; }
+  .info-chip { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.7rem .5rem; text-align:center; }
+  .info-chip .val { font-size:1.1rem; font-weight:800; color:var(--primary); }
+  .info-chip .lbl { font-size:.65rem; color:var(--text-muted); text-transform:uppercase; margin-top:.1rem; }
+  .msg-preview { background:var(--surface); margin:.5rem 1rem; border-radius:var(--radius); border:1px solid var(--border); padding:.8rem 1rem; display:flex; gap:.75rem; align-items:center; cursor:pointer; }
+  .msg-preview:active { background:var(--bg); }
+  .msg-avatar { width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0; }
+  .msg-body .from { font-size:.82rem; font-weight:700; }
+  .msg-body .text { font-size:.76rem; color:var(--text-sec); }
+  .unread-dot { width:9px;height:9px;background:var(--danger);border-radius:50%;margin-left:auto;flex-shrink:0; }
+  .app-bottom { height:70px; }
+  .bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:400px; background:var(--surface); border-top:1px solid var(--border); display:flex; z-index:100; box-shadow:0 -2px 10px rgba(0,0,0,.1); }
+  .bottom-btn { flex:1; padding:.65rem .5rem .5rem; text-align:center; cursor:pointer; font-size:.62rem; color:var(--text-muted); font-weight:600; transition:color .2s; border:none; background:transparent; }
+  .bottom-btn .icon { font-size:1.3rem; display:block; }
+  .bottom-btn.active { color:var(--primary); }
+  .offline-banner { background:#fff3cd; padding:.5rem 1rem; font-size:.75rem; color:#7a5200; text-align:center; display:flex; align-items:center; justify-content:center; gap:.4rem; }
+  .status-selector { padding:.75rem 1rem; }
+  .status-opts { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+  .status-opt { padding:.7rem; border-radius:10px; border:2px solid var(--border); background:var(--surface); font-size:.78rem; font-weight:700; cursor:pointer; text-align:center; transition:all .2s; }
+  .status-opt.sel { border-color:var(--primary); background:#daedf5; color:var(--primary); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="top">
+      <div class="app-logo">🏢 EcoRoute <span>AI</span></div>
+      <div class="signal-bar">📶 5G ✅ GPS</div>
+    </div>
+  </div>
+
+  <!-- Driver card -->
+  <div class="driver-card">
+    <div class="driver-name">🚛 Cristiano Ronaldo</div>
+    <div class="driver-sub">CAM-042 · Placa BCAT-74 · Refrigerado</div>
+    <div style="margin-top:.7rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+      <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:20px;font-size:.75rem;">🟢 En ruta</span>
+      <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:20px;font-size:.75rem;">⏱️ ETA: 3h 20min</span>
+      <span style="background:rgba(255,255,255,.2);padding:.2rem .7rem;border-radius:20px;font-size:.75rem;">📦 Lácteos</span>
+    </div>
+  </div>
+
+  <!-- Offline banner (oculto por defecto) -->
+  <div class="offline-banner" id="offline-banner" style="display:none;">
+    📴 Sin señal — Modo Offline activo. Datos sincronizarán al recuperar red.
+  </div>
+
+  <!-- Ruta activa -->
+  <div class="route-banner">
+    <div class="route-top">
+      <span>📍 Ruta Activa</span>
+      <span>Km 320 de 677</span>
+    </div>
+    <div class="route-stops">
+      <div class="stop">
+        <div><div class="stop-dot origin"></div></div>
+        <div><div class="stop-label">Santiago</div><div class="stop-sub">Salida 06:30 · ✅ Completado</div></div>
+      </div>
+      <div class="stop-line" style="margin-left:5px;"></div>
+      <div class="stop" style="opacity:.6;">
+        <div><div class="stop-dot" style="border-color:var(--text-muted);background:var(--text-muted);"></div></div>
+        <div><div class="stop-label">Rancagua</div><div class="stop-sub">Paso intermedio · ✅ Completado</div></div>
+      </div>
+      <div class="stop-line" style="margin-left:5px;"></div>
+      <div class="stop">
+        <div><div class="stop-dot" style="border-color:var(--warning);background:var(--warning);animation:pulse 1.5s infinite;"></div></div>
+        <div><div class="stop-label">📍 Posición actual</div><div class="stop-sub">Km 320 · 72 km/h · ❄️ -2°C cadena frío OK</div></div>
+      </div>
+      <div class="stop-line" style="margin-left:5px;"></div>
+      <div class="stop" style="opacity:.5;">
+        <div><div class="stop-dot dest"></div></div>
+        <div><div class="stop-label">Temuco</div><div class="stop-sub">ETA: 09:50 · ~3h 20min</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="info-row">
+    <div class="info-chip"><div class="val">72</div><div class="lbl">km/h</div></div>
+    <div class="info-chip"><div class="val">-2°C</div><div class="lbl">Temp. carga</div></div>
+    <div class="info-chip"><div class="val">68%</div><div class="lbl">Combustible</div></div>
+    <div class="info-chip"><div class="val">3h 20m</div><div class="lbl">ETA</div></div>
+  </div>
+
+  <!-- Acciones rápidas -->
+  <div class="section-title">Acciones rápidas</div>
+  <button class="big-btn big-btn-success" onclick="reportar('Llegada a destino reportada ✅')">✅ Confirmar Llegada</button>
+  <button class="big-btn big-btn-warning" onclick="reportar('Retraso reportado ⚠️')">⏱️ Reportar Retraso</button>
+  <button class="big-btn big-btn-accent"  onclick="reportar('Incidencia enviada al operador 📋')">⚠️ Reportar Incidencia</button>
+
+  <!-- Estado del conductor -->
+  <div class="section-title">Mi estado</div>
+  <div class="status-selector">
+    <div class="status-opts">
+      <div class="status-opt sel" onclick="setStatus(this)">🚛 En ruta</div>
+      <div class="status-opt" onclick="setStatus(this)">☕ Descanso</div>
+      <div class="status-opt" onclick="setStatus(this)">⛽ Repostando</div>
+      <div class="status-opt" onclick="setStatus(this)">🅿️ Detenido</div>
+    </div>
+  </div>
+
+  <!-- Mensajes recientes -->
+  <div class="section-title">Mensajes del operador</div>
+  <div class="msg-preview" onclick="window.location.href='comunicacion.html'">
+    <div class="msg-avatar">👤</div>
+    <div class="msg-body">
+      <div class="from">Operador Central</div>
+      <div class="text">Atención con lluvia en Km 450, reduce velocidad.</div>
+    </div>
+    <div class="unread-dot"></div>
+  </div>
+  <div class="msg-preview" onclick="window.location.href='comunicacion.html'">
+    <div class="msg-avatar">⚠️</div>
+    <div class="msg-body">
+      <div class="from">Sistema — Alerta automática</div>
+      <div class="text">Cadena de frío OK · Última verificación hace 4 min</div>
+    </div>
+  </div>
+
+  <div class="app-bottom"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="bottom-btn active"><span class="icon">🏠</span>Inicio</button>
+    <button class="bottom-btn" onclick="window.location.href='geolocalizacion.html'"><span class="icon">🗺️</span>Mapa</button>
+    <button class="bottom-btn" onclick="window.location.href='comunicacion.html'"><span class="icon">💬</span>Mensajes</button>
+    <button class="bottom-btn" onclick="window.location.href='alertas.html'"><span class="icon">⚠️</span>Alertas</button>
+    <button class="bottom-btn" onclick="window.location.href='login.html'"><span class="icon">👤</span>Salir</button>
+  </nav>
+</div>
+
+<script>
+/**
+ * reportar: envía un reporte de estado al operador central
+ * En producción esto haría una llamada a la API con la posición GPS actual
+ */
+function reportar(msg){ alert(msg); }
+function setStatus(el){
+  document.querySelectorAll('.status-opt').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+// Simular modo offline toggle
+// Variable que controla si el conductor está en modo offline
+// Cuando offline=true, los mensajes se guardan en cola local
+let offline = false;
+document.querySelector('.signal-bar').onclick=()=>{
+  offline=!offline;
+  document.getElementById('offline-banner').style.display=offline?'flex':'none';
+  document.querySelector('.signal-bar').textContent=offline?'📵 Sin señal 📴 Offline':'📶 4G ✅ GPS';
+};
+// Simular incremento de kilometraje en la ruta activa
+/**
+setInterval(()=>{
+  const kms = document.querySelector('.route-top span:last-child');
+  if(kms){ const cur=parseInt(kms.textContent); kms.textContent='Km '+(cur+1)+' de 677'; }
+},5000);
+*/
+</script>
+</body>
+</html>

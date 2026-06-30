@@ -1,0 +1,187 @@
+<!--=======================================================================================
+  EcoRoute Logistic AI — ALERTAS
+  Archivo: alertas.html
+  Autor: Wilian Zela (Dev Frontend)
+
+  Descripción: Panel de alertas en tiempo real integrado con la API de Meteored.
+  Muestra alertas por severidad (Crítica, Alta, Media, Baja) con opciones de filtrado.
+  Incluye condiciones meteorológicas por zona y rutas afectadas.
+  =======================================================================================-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoRoute AI — Alertas Climáticas</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .alert-card { border-radius:var(--radius); border:1.5px solid; padding:1rem 1.25rem; margin-bottom:.75rem; transition:transform .15s; cursor:default; }
+  .alert-card:hover { transform:translateY(-2px); }
+  .alert-card.critica  { border-color:var(--danger);  background:#fff5f5; }
+  .alert-card.alta     { border-color:var(--warning); background:#fffbf0; }
+  .alert-card.media    { border-color:var(--primary-light); background:#f0f8fc; }
+  .alert-card.baja     { border-color:var(--border); background:var(--bg); }
+  .alert-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; }
+  .alert-type { font-size:1.3rem; }
+  .alert-title { font-weight:700; color:var(--text); font-size:.92rem; }
+  .alert-route { font-size:.8rem; color:var(--text-sec); margin-top:.15rem; }
+  .alert-detail { font-size:.82rem; color:var(--text-sec); margin-top:.4rem; }
+  .alert-footer { display:flex; justify-content:space-between; align-items:center; margin-top:.65rem; }
+  .alert-time { font-size:.73rem; color:var(--text-muted); }
+  .severity-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+  .dot-critica{background:var(--danger);} .dot-alta{background:var(--warning);} .dot-media{background:var(--primary-light);} .dot-baja{background:var(--success);}
+  .filter-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .filter-chip { padding:.35rem .8rem; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); font-size:.78rem; font-weight:600; cursor:pointer; transition:all .18s; color:var(--text-sec); }
+  .filter-chip.sel { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .pulse { animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="dashboard.html"><span class="nav-logo">🗺️</span><span class="nav-title">EcoRoute <strong>AI</strong></span></a>
+  <div class="nav-links">
+    <a href="dashboard.html"       class="nav-link">Dashboard</a>
+    <a href="geolocalizacion.html" class="nav-link">Geolocalización</a>
+    <a href="flota.html"           class="nav-link">Flota</a>
+    <a href="asignacion.html"      class="nav-link">Asignación</a>
+    <a href="viaticos.html"        class="nav-link">Viáticos</a>
+    <a href="alertas.html"         class="nav-link active">Alertas</a>
+    <a href="comunicacion.html"    class="nav-link">Mensajería</a>
+  </div>
+  <div class="nav-user">
+    <span class="role-badge">Admin</span>
+    <span class="user-name">Administrador</span>
+    <a href="login.html" class="btn-logout">Salir</a>
+  </div>
+</nav>
+<div class="page-wrapper">
+<div class="container">
+  <div class="page-header flex-between">
+    <div>
+      <div class="page-title">⚠️ Alertas Climáticas y Operativas</div>
+      <div class="page-subtitle">RF-05 · Integración Meteored · GPS cada 30s · Alertas predictivas en tiempo real</div>
+    </div>
+    <div class="flex gap-1" style="align-items:center;">
+      <span class="pulse" style="font-size:.78rem;color:var(--danger);">🔴 7 alertas activas</span>
+      <button class="btn btn-sm btn-outline" onclick="markAllRead()">✓ Marcar todas leídas</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid" style="margin-bottom:1.25rem;">
+    <div class="kpi-card danger" ><div class="kpi-icon">🚨</div><div><div class="kpi-value">2</div><div class="kpi-label">Críticas</div></div></div>
+    <div class="kpi-card warning"><div class="kpi-icon">⛈️</div><div><div class="kpi-value">3</div><div class="kpi-label">Prioridad Alta</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">☁️</div><div><div class="kpi-value">2</div><div class="kpi-label">Prioridad Media</div></div></div>
+    <div class="kpi-card success"><div class="kpi-icon">✅</div><div><div class="kpi-value">14</div><div class="kpi-label">Resueltas hoy</div></div></div>
+  </div>
+
+  <div class="two-col">
+    <!-- Lista alertas -->
+    <div>
+      <div class="filter-row">
+        <span class="filter-chip sel" onclick="setFilter('todas',this)">Todas (7)</span>
+        <span class="filter-chip" onclick="setFilter('critica',this)">🔴 Crítica</span>
+        <span class="filter-chip" onclick="setFilter('alta',this)">🟡 Alta</span>
+        <span class="filter-chip" onclick="setFilter('media',this)">🔵 Media</span>
+        <span class="filter-chip" onclick="setFilter('baja',this)">⚪ Baja</span>
+        <span class="filter-chip" onclick="setFilter('clima',this)">🌧️ Clima</span>
+        <span class="filter-chip" onclick="setFilter('frio',this)">❄️ Cadena de frío</span>
+      </div>
+      <div id="alerts-container"></div>
+    </div>
+
+    <!-- Panel derecho: detalle + estado tiempo -->
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+      <!-- Condiciones meteorológicas -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🌤️ Condiciones por Zona</span><span style="font-size:.72rem;color:var(--text-muted)">Meteored API</span></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem;">
+          <div class="flex-between" style="font-size:.84rem;"><span>📍 Santiago</span><span>☀️ 18°C · Despejado</span></div>
+          <div class="flex-between" style="font-size:.84rem;"><span>📍 Temuco</span><span>🌧️ 9°C · Lluvia moderada</span></div>
+          <div class="flex-between" style="font-size:.84rem;"><span>📍 Coyhaique</span><span>❄️ 2°C · Nieve ligera</span></div>
+          <div class="flex-between" style="font-size:.84rem;"><span>📍 Puerto Montt</span><span>⛈️ 7°C · Tormenta</span></div>
+          <div class="flex-between" style="font-size:.84rem;"><span>📍 Punta Arenas</span><span>🌬️ -1°C · Viento fuerte</span></div>
+        </div>
+      </div>
+
+      <!-- Rutas afectadas -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🛣️ Rutas Afectadas</span></div>
+        <div class="card-body" style="font-size:.84rem;display:flex;flex-direction:column;gap:.7rem;">
+          <div><div class="flex-between"><strong>Ruta 5 Sur (Km 890-930)</strong><span class="badge badge-danger">Crítico</span></div><div style="color:var(--text-sec);margin-top:.2rem;">Nieve en calzada · Velocidad máx. 40 km/h</div></div>
+          <div><div class="flex-between"><strong>Carretera Austral (Km 230)</strong><span class="badge badge-warning">Alto</span></div><div style="color:var(--text-sec);margin-top:.2rem;">Derrumbe parcial · Solo carril derecho disponible</div></div>
+          <div><div class="flex-between"><strong>Ruta CH-7 (Coyhaique)</strong><span class="badge badge-warning">Alto</span></div><div style="color:var(--text-sec);margin-top:.2rem;">Hielo en puente · Cruce con precaución</div></div>
+          <div><div class="flex-between"><strong>Ruta 5 Sur (Km 1.150)</strong><span class="badge badge-info">Medio</span></div><div style="color:var(--text-sec);margin-top:.2rem;">Lluvias intensas · Reducción de visibilidad</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+// Lista de alertas activas del sistema
+// sev: "critica"=rojo, "alta"=amarillo, "media"=azul, "baja"=gris
+// tag: "clima"=alerta meteorológica, "frio"=cadena de frío, "operativa"=mantenimiento
+const alerts = [
+  { sev:'critica', icon:'❄️', title:'Falla cadena de frío — CAM-047', route:'Ruta: Puerto Montt → Punta Arenas', detail:'Temperatura interior superó +8°C (límite: +4°C) hace 12 min. Se requiere atención inmediata.', time:'Hace 12 min', tag:'frio', cam:'CAM-047' },
+  { sev:'critica', icon:'🌨️', title:'Nevada severa — Ruta 5 Sur Km 890', route:'Camiones afectados: CAM-012, CAM-034, CAM-078', detail:'Acumulación de 15 cm de nieve. Ruta bloqueada. Desvío recomendado por Ruta 68.', time:'Hace 28 min', tag:'clima', cam:'CAM-012' },
+  { sev:'alta', icon:'⛈️', title:'Tormenta eléctrica — Zona Puerto Montt', route:'5 camiones en zona de riesgo', detail:'Vientos de 80 km/h y rayos. Se recomienda detención preventiva en área segura.', time:'Hace 45 min', tag:'clima', cam:'CAM-033' },
+  { sev:'alta', icon:'🌊', title:'Riesgo de inundación — Carretera Austral', route:'Ruta: Coyhaique → Cochrane', detail:'Nivel del río Ñirehuao sobre límite. Probabilidad de corte vial en próximas 2 horas.', time:'Hace 1h', tag:'clima', cam:'—' },
+  { sev:'alta', icon:'🌁', title:'Niebla densa — Ruta 7 Km 230', route:'Visibilidad < 50 metros', detail:'Se activa protocolo de velocidad reducida. Luces de niebla obligatorias.', time:'Hace 1.5h', tag:'clima', cam:'—' },
+  { sev:'media', icon:'💨', title:'Viento fuerte — Zona Austral', route:'Punta Arenas y alrededores', detail:'Ráfagas de 65 km/h. Riesgo de volcamiento para vehículos de alto perfil.', time:'Hace 2h', tag:'clima', cam:'—' },
+  { sev:'media', icon:'🔧', title:'Mantenimiento preventivo — CAM-112', route:'Programado para mañana 08:00', detail:'Revisión de frenos y sistema hidráulico. El camión quedará fuera de servicio por 4 horas.', time:'Hace 3h', tag:'operativa', cam:'CAM-112' },
+];
+
+const sevLabel = { critica:'Crítica', alta:'Alta', media:'Media', baja:'Baja' };
+const sevBadge = { critica:'badge-danger', alta:'badge-warning', media:'badge-info', baja:'badge-gray' };
+
+/**
+ * renderAlerts: genera el HTML de las tarjetas de alerta
+ * Cada tarjeta tiene color según severidad y botones de acción
+ */
+function renderAlerts(items){
+  const c = document.getElementById('alerts-container');
+  if(!items.length){ c.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text-muted);">✅ No hay alertas con este filtro</div>'; return; }
+  c.innerHTML = items.map(a=>`
+    <div class="alert-card ${a.sev}">
+      <div class="alert-top">
+        <div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span class="alert-type">${a.icon}</span>
+            <div>
+              <div class="alert-title">${a.title}</div>
+              <div class="alert-route">${a.route}</div>
+            </div>
+          </div>
+        </div>
+        <span class="badge ${sevBadge[a.sev]}">${sevLabel[a.sev]}</span>
+      </div>
+      <div class="alert-detail">${a.detail}</div>
+      <div class="alert-footer">
+        <span class="alert-time">🕐 ${a.time}</span>
+        <div style="display:flex;gap:.4rem;">
+          ${a.cam!=='—'?`<button class="btn btn-sm btn-outline" onclick="window.location.href='comunicacion.html'">💬 Contactar</button>`:''}
+          <button class="btn btn-sm btn-primary" onclick="this.closest('.alert-card').style.opacity='.4';this.textContent='✓ Atendida'">✓ Atender</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+let activeFilter='todas';
+function setFilter(f, el){
+  activeFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  if(f==='todas') renderAlerts(alerts);
+  else renderAlerts(alerts.filter(a=>a.sev===f||a.tag===f));
+}
+
+function markAllRead(){
+  document.querySelectorAll('.alert-card').forEach(c=>{ c.style.opacity='.4'; });
+}
+
+renderAlerts(alerts);
+</script>
+</body>
+</html>
