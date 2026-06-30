@@ -51,7 +51,111 @@
 </div>
 
 <script>
+// Base de datos de seguimientos de demostración
+// En producción esto vendría de una API con datos reales
+// Prueba con: TSA-2024-00182 (en tránsito), TSA-2024-00095 (entregado), TSA-2024-00341 (con retraso)
+const demos = {
+  'TSA-2024-00182': {
+    status:'transit', statusLabel:'En tránsito', pct:60,
+    origen:'Santiago', destino:'Temuco', carga:'Lácteos refrigerados',
+    conductor:'Juan Pérez', camion:'CAM-042',
+    peso:'8.400 kg', eta:'Hoy 17:30', distTotal:'677 km',
+    steps:[
+      { st:'done',  icon:'✓', title:'Pedido recibido', sub:'Registrado en sistema EcoRoute AI', time:'Hoy 06:00' },
+      { st:'done',  icon:'✓', title:'Carga verificada y sellada', sub:'Control de calidad y cadena de frío activada', time:'Hoy 06:45' },
+      { st:'done',  icon:'✓', title:'Salida desde Santiago', sub:'CAM-042 en ruta — Conductor: Juan Pérez', time:'Hoy 07:15' },
+      { st:'done',  icon:'✓', title:'Checkpoint Rancagua', sub:'Km 88 — Temperatura: -2°C ✅', time:'Hoy 08:40' },
+      { st:'active',icon:'→', title:'En tránsito — Km 320', sub:'Velocidad: 72 km/h · Temperatura: -2°C ✅', time:'Ahora' },
+      { st:'pend',  icon:'○', title:'Checkpoint Talca', sub:'Estimado: Hoy 14:20', time:'Pendiente' },
+      { st:'pend',  icon:'○', title:'Entrega en Temuco', sub:'ETA: Hoy 17:30', time:'Pendiente' },
+    ]
+  },
+  'TSA-2024-00095': {
+    status:'delivered', statusLabel:'Entregado ✅', pct:100,
+    origen:'Concepción', destino:'Castro', carga:'Carga seca',
+    conductor:'María González', camion:'CAM-015',
+    peso:'12.000 kg', eta:'Entregado ayer 16:45', distTotal:'430 km',
+    steps:[
+      { st:'done', icon:'✓', title:'Pedido recibido', sub:'Sistema EcoRoute AI', time:'Ayer 05:30' },
+      { st:'done', icon:'✓', title:'Carga verificada', sub:'Control de calidad aprobado', time:'Ayer 06:10' },
+      { st:'done', icon:'✓', title:'Salida desde Concepción', sub:'CAM-015 · M. González', time:'Ayer 07:00' },
+      { st:'done', icon:'✓', title:'En tránsito', sub:'Sin incidentes', time:'Ayer 10:30' },
+      { st:'done', icon:'✓', title:'✅ Entregado en Castro', sub:'Firmado por destinatario', time:'Ayer 16:45' },
+    ]
+  },
+  'TSA-2024-00341': {
+    status:'alert', statusLabel:'⚠️ Con retraso', pct:35,
+    origen:'Temuco', destino:'Punta Arenas', carga:'Farmacéuticos refrigerados',
+    conductor:'Carlos Rodríguez', camion:'CAM-073',
+    peso:'3.200 kg', eta:'Mañana 10:00 (estimado revisado)', distTotal:'2.420 km',
+    steps:[
+      { st:'done',  icon:'✓', title:'Pedido recibido y verificado', sub:'Prioridad alta · Carga farmacéutica', time:'Ayer 09:00' },
+      { st:'done',  icon:'✓', title:'Salida desde Temuco', sub:'CAM-073 en ruta', time:'Ayer 10:30' },
+      { st:'done',  icon:'✓', title:'Checkpoint Puerto Montt', sub:'Km 370 completado', time:'Ayer 17:00' },
+      { st:'active',icon:'⚠️', title:'Retraso — Condiciones climáticas', sub:'Nevada en Ruta 5 Sur. Desvío en curso.', time:'Hoy 04:15' },
+      { st:'pend',  icon:'○', title:'Coyhaique', sub:'Estimado: Hoy 22:00', time:'Pendiente' },
+      { st:'pend',  icon:'○', title:'Entrega en Punta Arenas', sub:'ETA revisado: Mañana 10:00', time:'Pendiente' },
+    ]
+  }
+};
 
+function setDemo(code){ document.getElementById('tracking-input').value=code; buscar(); }
+
+/**
+ * buscar: busca el número de seguimiento ingresado y muestra el timeline
+ * Si el número no existe, muestra un mensaje de error
+ * Si existe, construye el HTML del timeline dinámicamente
+ */
+function buscar(){
+  const code = document.getElementById('tracking-input').value.trim();
+  const notFound = document.getElementById('not-found');
+  notFound.style.display='none';
+  const container = document.getElementById('result-container');
+  if(!demos[code]){ container.innerHTML=''; notFound.style.display='block'; return; }
+  const d=demos[code];
+  const statusColor = {transit:'var(--primary-light)',delivered:'var(--success)',alert:'var(--warning)'}[d.status];
+  container.innerHTML=`
+    <div class="result-card">
+      <div class="result-header">
+        <div>
+          <div style="font-size:.75rem;opacity:.7;letter-spacing:.5px;text-transform:uppercase;">N° de seguimiento</div>
+          <div class="result-num">${code}</div>
+          <div class="result-status-big" style="margin-top:.5rem;"><span style="background:${statusColor};border-radius:20px;padding:.2rem .7rem;font-size:.78rem;">${d.statusLabel}</span></div>
+        </div>
+        <div style="text-align:right;font-size:.78rem;opacity:.8;">
+          <div>${d.origen} → ${d.destino}</div>
+          <div>${d.carga}</div>
+          <div style="margin-top:.3rem;font-size:.72rem;">${d.camion} · ${d.conductor}</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div style="font-size:.82rem;font-weight:700;color:var(--primary-dark);margin-bottom:1rem;">📍 Estado del envío</div>
+        ${d.steps.map((s,i)=>`
+          <div class="tl-item">
+            <div class="tl-left">
+              <div class="tl-dot ${s.st}">${s.icon}</div>
+              ${i<d.steps.length-1?`<div class="tl-line ${s.st==='done'?'done':''}"></div>`:''}
+            </div>
+            <div class="tl-content">
+              <div class="tl-title" style="color:${s.st==='active'?'var(--primary)':s.st==='pend'?'var(--text-muted)':'var(--text)'}">${s.title}</div>
+              <div class="tl-sub">${s.sub}</div>
+              <div class="tl-time">${s.time}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="info-strip">
+        <div class="info-cell"><div class="lbl">Destino</div><div class="val">${d.destino}</div></div>
+        <div class="info-cell"><div class="lbl">ETA / Entrega</div><div class="val">${d.eta}</div></div>
+        <div class="info-cell"><div class="lbl">Peso</div><div class="val">${d.peso}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('tracking-input').addEventListener('keydown',e=>{ if(e.key==='Enter') buscar(); });
 </script>
 </body>
 </html>
