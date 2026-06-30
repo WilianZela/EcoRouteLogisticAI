@@ -36,48 +36,133 @@
   </div>
 </nav>
 
-<script>
-</script>
-</body>
-</html><!--=======================================================================================
-  EcoRoute Logistic AI — COMUNICACION
-  Archivo: comunicacion.html
-  Autor: Oscar Inaipil (Dev Backend)
-
-  Descripción: Sistema de mensajería entre operadores y conductores. Incluye lista de 
-  conversaciones, chat en tiempo real y soporte para modo offline: los mensajes 
-  se guardan en cola y se sincronizan cuando el conductor recupera señal.
-  =======================================================================================-->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EcoRoute AI — Mensajería</title>
-<link rel="stylesheet" href="styles.css">
-<style>
-</style>
-</head>
-<body>
-<nav class="navbar">
-  <a class="nav-brand" href="dashboard.html"><span class="nav-logo">🗺️</span><span class="nav-title">EcoRoute <strong>AI</strong></span></a>
-  <div class="nav-links">
-    <a href="dashboard.html"       class="nav-link">Dashboard</a>
-    <a href="geolocalizacion.html" class="nav-link">Geolocalización</a>
-    <a href="flota.html"           class="nav-link">Flota</a>
-    <a href="asignacion.html"      class="nav-link">Asignación</a>
-    <a href="viaticos.html"        class="nav-link">Viáticos</a>
-    <a href="alertas.html"         class="nav-link">Alertas</a>
-    <a href="comunicacion.html"    class="nav-link active">Mensajería</a>
+<div class="page-wrapper">
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">💬 Mensajería Interna</div>
+    <div class="page-subtitle">RF-10 · Comunicación directa con conductores · Modo Offline incluido</div>
   </div>
-  <div class="nav-user">
-    <span class="role-badge">Admin</span>
-    <span class="user-name">Administrador</span>
-    <a href="login.html" class="btn-logout">Salir</a>
+
+  <div class="chat-layout">
+    <!-- Sidebar conversaciones -->
+    <div class="chat-sidebar">
+      <div class="sidebar-header">🚛 Conductores (15)</div>
+      <div class="sidebar-search">
+        <input type="text" class="form-control" placeholder="🔍 Buscar..." style="font-size:.78rem;">
+      </div>
+      <div class="conv-list" id="conv-list"></div>
+    </div>
+
+    <!-- Chat principal -->
+    <div class="chat-main">
+      <div class="chat-header">
+        <div class="chat-status status-online" id="chat-dot"></div>
+        <div class="chat-info">
+          <div class="name" id="chat-name">Juan Pérez — CAM-042</div>
+          <div class="sub" id="chat-sub">🟢 En línea · Santiago → Temuco · Km 320</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:.5rem;">
+          <button class="btn btn-sm btn-outline" onclick="window.location.href='geolocalizacion.html'">🗺️ Ver en mapa</button>
+          <button class="btn btn-sm btn-danger btn-sm" onclick="alert('Llamada iniciada...')">📞</button>
+        </div>
+      </div>
+
+      <div class="messages-area" id="messages-area"></div>
+
+      <div style="padding:.4rem 1rem;font-size:.73rem;color:var(--text-muted);border-top:1px solid var(--border);background:#fafcfd;">
+        <span id="offline-note"></span>
+      </div>
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="msg-input" rows="1" placeholder="Escribe un mensaje..." onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
+      </div>
+    </div>
   </div>
-</nav>
+</div>
+</div>
 
 <script>
+// Lista de conversaciones activas con conductores
+// status: "online" = conectado, "offline" = sin señal, "alert" = con alerta
+const conversations = [
+  { name:'Jorge Roman', cam:'CAM-042', status:'online',  icon:'🚛', last:'Confirmado. Ya salí de Rancagua.', unread:0 },
+  { name:'María González', cam:'CAM-015', status:'alert',  icon:'🚨', last:'Falla en temperatura del contenedor', unread:2 },
+  { name:'Carlos Rodríguez', cam:'CAM-073', status:'offline', icon:'🚛', last:'Sin señal desde hace 20 min', unread:0 },
+  { name:'Ana Morales', cam:'CAM-034', status:'online',  icon:'🚛', last:'Llegando a Puerto Montt', unread:1 },
+  { name:'Luis Soto', cam:'CAM-091', status:'online',  icon:'🚛', last:'¿Cuál es el desvío recomendado?', unread:3 },
+  { name:'Roberto Díaz', cam:'CAM-008', status:'offline', icon:'🚛', last:'Mensaje en cola (offline)', unread:0 },
+];
+
+const chatHistory = [
+  { from:'them', text:'Buenos días. Saliendo de Santiago, ruta confirmada.', time:'08:15' },
+  { from:'me',   text:'Buenos días Juan. Confirma cuando pases Rancagua.', time:'08:16' },
+  { from:'them', text:'Confirmado. Ya salí de Rancagua. Tráfico normal.', time:'09:42' },
+  { from:'me',   text:'Perfecto. Atención con lluvia en Km 450, reduce velocidad.', time:'09:45' },
+  { from:'them', text:'Recibido. ¿Hay desvíos activos en esa zona?', time:'09:46', offline:false },
+];
+
+function renderConvList(){
+  const el = document.getElementById('conv-list');
+  conversations.forEach((c,i)=>{
+    const statusCls = {online:'online',offline:'offline',alert:'alert'}[c.status];
+    const dotCls = {online:'badge-success',offline:'badge-gray',alert:'badge-danger'}[c.status];
+    const div=document.createElement('div');
+    div.className='conv-item'+(i===0?' active':'');
+    div.innerHTML=`
+      <div class="conv-avatar ${statusCls}">${c.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="conv-name">${c.name} <span class="badge ${dotCls}" style="font-size:.6rem;padding:.1rem .4rem;">${c.cam}</span></div>
+        <div class="conv-last">${c.last}</div>
+      </div>
+      ${c.unread>0?`<span class="conv-badge">${c.unread}</span>`:''}
+    `;
+    div.onclick=()=>{
+      document.querySelectorAll('.conv-item').forEach(x=>x.classList.remove('active'));
+      div.classList.add('active');
+      document.getElementById('chat-name').textContent=c.name+' — '+c.cam;
+      const isOffline = c.status==='offline';
+      document.getElementById('chat-sub').textContent = isOffline?'⭕ Sin señal · Mensajes en cola (Modo Offline)':'🟢 En línea · Mensajes en tiempo real';
+      document.getElementById('chat-dot').className='chat-status '+(isOffline?'status-offline':c.status==='alert'?'status-alert':'status-online');
+      document.getElementById('offline-note').textContent = isOffline ? '📴 Conductor sin señal. Los mensajes se entregarán en cuanto recupere conectividad (Modo Offline).' : '';
+    };
+    el.appendChild(div);
+  });
+}
+
+function renderMessages(){
+  const area = document.getElementById('messages-area');
+  area.innerHTML = chatHistory.map(m=>`
+    <div class="msg ${m.from}">
+      <div class="msg-bubble">${m.text}${m.offline?'<span class="offline-tag" style="margin-left:.4rem;">📴 offline</span>':''}</div>
+      <div class="msg-time">${m.time}${m.from==='me'?' · ✓✓':''}</div>
+    </div>
+  `).join('');
+  area.scrollTop = area.scrollHeight;
+}
+
+/**
+   * sendMsg: envía un mensaje al conductor seleccionado
+   * Si el conductor está offline, el mensaje queda "en cola"
+   * Se simula una respuesta automática después de 1.2 segundos
+   */
+  function sendMsg(){
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const now = new Date().toTimeString().slice(0,5);
+  chatHistory.push({ from:'me', text, time:now });
+  renderMessages();
+  input.value='';
+  setTimeout(()=>{
+    chatHistory.push({ from:'them', text:'Mensaje recibido. ✅', time:new Date().toTimeString().slice(0,5) });
+    renderMessages();
+  },1200);
+}
+
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+
+renderConvList();
+renderMessages();
 </script>
 </body>
 </html>
