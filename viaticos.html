@@ -15,6 +15,15 @@
 <title>EcoRoute AI — Cálculo de Viáticos</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  .result-box { background:var(--primary-dark); color:#fff; border-radius:var(--radius); padding:1.5rem; text-align:center; }
+  .result-total { font-size:2.5rem; font-weight:900; color:var(--accent); letter-spacing:-1px; }
+  .result-label { font-size:.85rem; opacity:.8; margin-top:.2rem; }
+  .breakdown-item { display:flex; justify-content:space-between; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,.12); font-size:.88rem; }
+  .breakdown-item:last-child { border:none; font-weight:700; font-size:1rem; }
+  .breakdown-item .amount { color:var(--accent); font-weight:600; }
+  .error-margin { background:#dcf5e9; border:1px solid var(--success); border-radius:var(--radius-sm); padding:.6rem 1rem; font-size:.82rem; color:#1a6640; margin-top:.75rem; }
+  .route-info { background:var(--bg); border-radius:var(--radius-sm); padding:.75rem 1rem; font-size:.82rem; color:var(--text-sec); margin-bottom:1rem; border-left:3px solid var(--primary-light); }
+  .history-table { font-size:.82rem; }
 </style>
 </head>
 <body>
