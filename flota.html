@@ -15,6 +15,19 @@
 <title>EcoRoute AI — Gestión de Flota</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  .filter-bar { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem; }
+  .filter-btn { padding:.4rem .9rem; border-radius:20px; border:1.5px solid var(--border); background:var(--surface); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .2s; color:var(--text-sec); }
+  .filter-btn.active  { border-color:var(--primary); background:var(--primary); color:#fff; }
+  .filter-btn.success { border-color:var(--success); background:var(--success); color:#fff; }
+  .filter-btn.warning { border-color:var(--warning); background:var(--warning); color:#fff; }
+  .filter-btn.danger  { border-color:var(--danger);  background:var(--danger);  color:#fff; }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:2000; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:#fff; border-radius:var(--radius); padding:1.5rem; max-width:420px; width:90%; box-shadow:var(--shadow-lg); }
+  .modal-title { font-size:1.1rem; font-weight:700; color:var(--primary-dark); margin-bottom:1rem; }
+  .pager { display:flex; gap:.4rem; align-items:center; justify-content:flex-end; margin-top:1rem; }
+  .page-btn { width:32px;height:32px;border-radius:6px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text-sec); transition:all .2s; }
+  .page-btn.active,.page-btn:hover { background:var(--primary);border-color:var(--primary);color:#fff; }
 </style>
 </head>
 <body>
