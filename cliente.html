@@ -15,6 +15,47 @@
 <title>EcoRoute AI — Portal Cliente</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  body { background:linear-gradient(160deg,var(--primary-dark) 0%,var(--primary) 40%,var(--bg) 70%); }
+  .portal-wrap { max-width:720px; margin:0 auto; padding:2rem 1rem 3rem; }
+  .portal-header { text-align:center; color:#fff; padding:2rem 1rem 1.5rem; }
+  .portal-logo { font-size:2.5rem; display:block; margin-bottom:.3rem; }
+  .portal-title { font-size:1.8rem; font-weight:900; }
+  .portal-title span { color:var(--accent); }
+  .portal-sub { opacity:.8; font-size:.9rem; margin-top:.3rem; }
+  .search-card { background:var(--surface); border-radius:var(--radius); padding:1.75rem; box-shadow:var(--shadow-lg); margin-bottom:1.5rem; }
+  .search-big { display:flex; gap:.6rem; }
+  .search-big input { flex:1; padding:.8rem 1rem; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:1rem; outline:none; transition:border-color .2s; }
+  .search-big input:focus { border-color:var(--primary); }
+  .search-big button { padding:.8rem 1.5rem; background:var(--primary); color:#fff; border:none; border-radius:var(--radius-sm); font-size:.95rem; font-weight:700; cursor:pointer; transition:background .2s; white-space:nowrap; }
+  .search-big button:hover { background:var(--primary-dark); }
+  .examples { margin-top:.75rem; font-size:.78rem; color:var(--text-muted); }
+  .examples a { color:var(--primary); text-decoration:none; font-weight:600; margin-right:.5rem; }
+  .result-card { background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow-lg); overflow:hidden; }
+  .result-header { background:var(--primary-dark); color:#fff; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:flex-start; }
+  .result-num { font-size:1.1rem; font-weight:800; letter-spacing:.5px; }
+  .result-status-big { display:flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:600; margin-top:.3rem; }
+  .timeline { padding:1.5rem; }
+  .tl-item { display:flex; gap:1rem; margin-bottom:1.25rem; position:relative; }
+  .tl-item:last-child { margin-bottom:0; }
+  .tl-left { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+  .tl-dot { width:20px;height:20px;border-radius:50%;border:3px solid;display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0; }
+  .tl-dot.done   { background:var(--success);border-color:var(--success);color:#fff; }
+  .tl-dot.active { background:var(--primary);border-color:var(--primary);color:#fff; }
+  .tl-dot.pend   { background:#fff;border-color:var(--border); }
+  .tl-line { width:2px;background:var(--border);flex:1;min-height:20px; }
+  .tl-line.done { background:var(--success); }
+  .tl-content { flex:1; padding-bottom:.5rem; }
+  .tl-title { font-size:.88rem; font-weight:700; color:var(--text); }
+  .tl-sub   { font-size:.78rem; color:var(--text-sec); margin-top:.2rem; }
+  .tl-time  { font-size:.73rem; color:var(--text-muted); margin-top:.15rem; }
+  .tl-item:last-child .tl-line { display:none; }
+  .info-strip { border-top:1px solid var(--border); padding:1rem 1.5rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+  .info-cell { text-align:center; }
+  .info-cell .lbl { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
+  .info-cell .val { font-size:.9rem; font-weight:700; color:var(--primary-dark); margin-top:.2rem; }
+  .empty-state { text-align:center; padding:2.5rem 1rem; color:var(--text-muted); }
+  .empty-icon { font-size:3rem; display:block; margin-bottom:.75rem; }
+  .not-found { background:#fff5f5; border:1px solid var(--danger); border-radius:var(--radius-sm); padding:.75rem 1rem; color:var(--danger); font-size:.85rem; margin-top:.75rem; display:none; }
 </style>
 </head>
 <body>
