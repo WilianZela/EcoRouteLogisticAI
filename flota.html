@@ -36,7 +36,171 @@
   </div>
 </nav>
 
-<script>    
+<div class="page-wrapper">
+<div class="container">
+  <div class="page-header flex-between">
+    <div>
+      <div class="page-title">🚛 Gestión de Flota</div>
+      <div class="page-subtitle">RF-06 · Estado mecánico y asignación de 150 unidades</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">＋ Agregar Unidad</button>
+  </div>
+
+  <div class="kpi-grid" style="margin-bottom:1.25rem;">
+    <div class="kpi-card success"><div class="kpi-icon">✅</div><div><div class="kpi-value">143</div><div class="kpi-label">En Ruta</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🅿️</div><div><div class="kpi-value">5</div><div class="kpi-label">Disponibles</div></div></div>
+    <div class="kpi-card warning"><div class="kpi-icon">🔧</div><div><div class="kpi-value">2</div><div class="kpi-label">En Taller</div></div></div>
+    <div class="kpi-card danger"><div class="kpi-icon">❄️</div><div><div class="kpi-value">1</div><div class="kpi-label">Falla Frío</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="filter-bar" style="margin:0;">
+        <button class="filter-btn active" onclick="filterFlota('todos',this)">Todos (150)</button>
+        <button class="filter-btn" onclick="filterFlota('ruta',this)">En Ruta (143)</button>
+        <button class="filter-btn" onclick="filterFlota('disponible',this)">Disponibles (5)</button>
+        <button class="filter-btn" onclick="filterFlota('taller',this)">En Taller (2)</button>
+      </div>
+      <div class="search-bar" style="width:220px;">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="form-control" placeholder="Buscar patente o ID..." oninput="searchFlota(this.value)">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Unidad</th><th>Patente</th><th>Conductor</th><th>Tipo Carga</th>
+            <th>Estado Mecánico</th><th>GPS</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="flota-table"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="pager" style="padding:.75rem 1rem;"></div>
+  </div>
+</div>
+</div>
+
+<!-- Modal agregar -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">➕ Agregar Nueva Unidad</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">ID Unidad</label><input type="text" class="form-control" placeholder="CAM-151"></div>
+      <div class="form-group"><label class="form-label">Patente</label><input type="text" class="form-control" placeholder="AB-1234-CD"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-control"><option>Refrigerado</option><option>Carga Seca</option><option>Cisterna</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Año</label><input type="number" class="form-control" placeholder="2023" min="2000" max="2025"></div>
+    </div>
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:.5rem;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal()">Guardar Unidad</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── JavaScript de Gestión de Flota ──
+     Generamos datos de ejemplo para las 20 filas de la tabla.
+     En producción estos datos vendrían de una API o base de datos. -->
+<script>
+  // Arrays de datos de ejemplo para poblar la tabla
+const conductores = ['J. Pérez','M. González','C. Rodríguez','A. Morales','L. Soto','R. Díaz','P. Muñoz','F. Castro','N. Silva','D. Vargas'];
+const cargas = ['Refrigerado','Carga Seca','Frutas','Lácteos','Farmacéutico','Electrónica','Combustible'];
+const patentes = ['BCAT-74','CGPZ-11','DVAM-55','FKRE-28','HLOX-63','JNBV-42','KPQW-87','MRDS-19','NTZJ-96','QVCE-34'];
+const mecEst = ['Óptimo','Óptimo','Óptimo','Revisión leve','Pendiente'];
+const estados = ['ruta','ruta','ruta','ruta','ruta','ruta','disponible','disponible','taller'];
+const estadoLabel = {ruta:'En ruta',disponible:'Disponible',taller:'En taller'};
+const estadoBadge = {ruta:'badge-success',disponible:'badge-info',taller:'badge-warning'};
+
+let allRows = [];
+const PAGE = 10;
+let curPage = 1;
+let filtered = [];
+
+for(let i=1;i<=20;i++){
+  const st = estados[Math.floor(Math.random()*estados.length)];
+  const mec = mecEst[Math.floor(Math.random()*mecEst.length)];
+  allRows.push({
+    id:'CAM-'+String(i).padStart(3,'0'),
+    patente: patentes[Math.floor(Math.random()*patentes.length)]+'-'+Math.floor(Math.random()*90+10),
+    conductor: conductores[Math.floor(Math.random()*conductores.length)],
+    carga: cargas[Math.floor(Math.random()*cargas.length)],
+    mec, st,
+    gps: Math.random()>.1 ? 'Activo' : 'Inactivo'
+  });
+}
+
+  /**
+   * renderTable: recibe un arreglo de filas y las muestra en la tabla
+   * También resetea a la página 1 y actualiza el paginador
+   */
+  function renderTable(rows){
+  filtered = rows;
+  curPage = 1;
+  renderPage();
+}
+
+function renderPage(){
+  const start = (curPage-1)*PAGE;
+  const slice = filtered.slice(start, start+PAGE);
+  const tbody = document.getElementById('flota-table');
+  tbody.innerHTML = slice.map(r=>{
+    const mecCls = r.mec==='Óptimo'?'badge-success':r.mec==='Revisión leve'?'badge-warning':'badge-danger';
+    const gpsCls = r.gps==='Activo'?'badge-success':'badge-danger';
+    return `<tr data-status="${r.st}">
+      <td><strong>${r.id}</strong></td>
+      <td>${r.patente}</td>
+      <td>${r.conductor}</td>
+      <td>${r.carga}</td>
+      <td><span class="badge ${mecCls}">${r.mec}</span></td>
+      <td><span class="badge ${gpsCls}">${r.gps}</span></td>
+      <td><span class="badge ${estadoBadge[r.st]}">${estadoLabel[r.st]}</span></td>
+      <td><button class="btn btn-sm btn-outline" onclick="alert('Editando ${r.id}')">✏️ Editar</button></td>
+    </tr>`;
+  }).join('');
+  renderPager();
+}
+
+function renderPager(){
+  const total = Math.ceil(filtered.length/PAGE);
+  const pg = document.getElementById('pager');
+  pg.innerHTML='';
+  for(let i=1;i<=total;i++){
+    const b=document.createElement('button');
+    b.className='page-btn'+(i===curPage?' active':'');
+    b.textContent=i;
+    b.onclick=()=>{ curPage=i; renderPage(); };
+    pg.appendChild(b);
+  }
+}
+
+let activeFilter = 'todos';
+  /**
+   * filterFlota: filtra la tabla según el estado del camión
+   * @param {string} f - filtro: "todos", "ruta", "disponible" o "taller"
+   * @param {HTMLElement} el - botón clickeado para marcar como activo
+   */
+  function filterFlota(f, el){
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active','success','warning','danger'));
+  el.classList.add('active');
+  const map={todos:null,ruta:'ruta',disponible:'disponible',taller:'taller'};
+  renderTable(map[f]===null ? allRows : allRows.filter(r=>r.st===map[f]));
+}
+
+function searchFlota(q){
+  const base = activeFilter==='todos'?allRows:allRows.filter(r=>r.st===activeFilter);
+  renderTable(q?base.filter(r=>r.id.toLowerCase().includes(q.toLowerCase())||r.patente.toLowerCase().includes(q.toLowerCase())):base);
+}
+
+function openModal(){ document.getElementById('modal').classList.add('open'); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+renderTable(allRows);
 </script>
 </body>
 </html>
