@@ -7,3 +7,51 @@
   de seguimiento y ve un timeline con el estado actual del envío, el conductor asignado, 
   el camión y el ETA estimado. No requiere inicio de sesión.
   =======================================================================================-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoRoute AI — Portal Cliente</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+</style>
+</head>
+<body>
+<div class="portal-wrap">
+  <!-- Header -->
+  <div class="portal-header">
+    <span class="portal-logo">🗺️</span>
+    <div class="portal-title">EcoRoute <span>AI</span></div>
+    <div class="portal-sub">Portal de Seguimiento de Envíos — Transporte Sur-Austral</div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-card">
+    <label style="font-size:.88rem;font-weight:700;color:var(--primary-dark);display:block;margin-bottom:.6rem;">🔍 Ingrese su número de seguimiento</label>
+    <div class="search-big">
+      <input type="text" id="tracking-input" placeholder="Ej: TSA-2024-00182" maxlength="20" oninput="this.value=this.value.toUpperCase()">
+      <button onclick="buscar()">Rastrear Envío</button>
+    </div>
+    <div class="examples">
+      Pruebe con: <a href="#" onclick="setDemo('TSA-2024-00182')">TSA-2024-00182</a>
+      <a href="#" onclick="setDemo('TSA-2024-00095')">TSA-2024-00095</a>
+      <a href="#" onclick="setDemo('TSA-2024-00341')">TSA-2024-00341</a>
+    </div>
+    <div class="not-found" id="not-found">❌ Número de seguimiento no encontrado. Verifique e intente nuevamente.</div>
+  </div>
+
+  <!-- Resultado -->
+  <div id="result-container"></div>
+
+  <!-- Nav admin -->
+  <div style="text-align:center;margin-top:1.5rem;">
+    <a href="login.html" style="color:rgba(255,255,255,.7);font-size:.78rem;text-decoration:none;">¿Eres operador? → Iniciar sesión en panel administrativo</a>
+  </div>
+</div>
+
+<script>
+
+</script>
+</body>
+</html>
